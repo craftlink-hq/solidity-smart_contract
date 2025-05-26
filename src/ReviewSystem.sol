@@ -19,7 +19,9 @@ contract ReviewSystem {
 
     mapping(address => ReviewInfo[]) public artisanReviews;
 
-    event ReviewSubmitted(address indexed reviewer, address indexed reviewee, bytes32 indexed databaseId, uint256 rating);
+    event ReviewSubmitted(
+        address indexed reviewer, address indexed reviewee, bytes32 indexed databaseId, uint256 rating
+    );
 
     constructor(address _registryAddress, address _gigMarketplaceAddress) {
         registry = Registry(_registryAddress);
@@ -29,7 +31,8 @@ contract ReviewSystem {
     function submitReview(bytes32 _databaseId, uint256 _rating, string memory _commentHash) external {
         require(_rating >= 1 && _rating <= 5, "Rating must be between 1 and 5");
 
-        (address client, address hiredArtisan, , , , bool isCompleted, bool isClosed) = gigMarketplace.getGigInfo(_databaseId);
+        (address client, address hiredArtisan,,,, bool isCompleted, bool isClosed) =
+            gigMarketplace.getGigInfo(_databaseId);
 
         require(msg.sender == client, "Only the client can submit a review");
         require(isCompleted, "Gig must be completed before submitting a review");
@@ -55,11 +58,11 @@ contract ReviewSystem {
     function getArtisanReviews(address _artisan) external view returns (string[] memory) {
         ReviewInfo[] memory reviews = artisanReviews[_artisan];
         string[] memory comments = new string[](reviews.length);
-   
+
         for (uint256 i = 0; i < reviews.length; i++) {
             comments[i] = reviews[i].commentHash;
         }
-   
+
         return comments;
     }
 

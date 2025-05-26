@@ -37,7 +37,7 @@ contract Registry {
 
         userTypes[msg.sender] = UserType.Artisan;
         artisanAddresses.push(msg.sender);
-        verifyArtisan(msg.sender);  // Just for now to verify later
+        verifyArtisan(msg.sender); // Just for now to verify later
         emit ArtisanRegistered(msg.sender, _ipfsHash);
     }
 

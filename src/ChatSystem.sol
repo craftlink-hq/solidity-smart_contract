@@ -20,14 +20,11 @@ contract ChatSystem {
     }
 
     function startConversation(bytes32 _conversationId, bytes32 _databaseId, bytes32 _initialRootHash) external {
-        (address client, address hiredArtisan, , , , , ) = gigMarketplace.getGigInfo(_databaseId);
+        (address client, address hiredArtisan,,,,,) = gigMarketplace.getGigInfo(_databaseId);
         require(msg.sender == client || msg.sender == hiredArtisan, "Not authorized");
         require(!conversations[_conversationId].isActive, "Already exists");
 
-        conversations[_conversationId] = ChatInfo({
-            rootHash: _initialRootHash,
-            isActive: true
-        });
+        conversations[_conversationId] = ChatInfo({rootHash: _initialRootHash, isActive: true});
 
         emit ConversationStarted(_conversationId, _initialRootHash);
     }
@@ -35,19 +32,15 @@ contract ChatSystem {
     function updateConversation(bytes32 _conversationId, bytes32 _databaseId, bytes32 _newRootHash) external {
         ChatInfo storage chat = conversations[_conversationId];
         require(chat.isActive, "Chat not active");
-    
-        (address client, address hiredArtisan, , , , , ) = gigMarketplace.getGigInfo(_databaseId);
+
+        (address client, address hiredArtisan,,,,,) = gigMarketplace.getGigInfo(_databaseId);
         require(msg.sender == client || msg.sender == hiredArtisan, "Not authorized");
-    
+
         chat.rootHash = _newRootHash;
         emit ConversationUpdated(_conversationId, _newRootHash);
     }
 
-    function getConversationDetails(bytes32 _conversationId) 
-        external 
-        view 
-        returns (bytes32 rootHash, bool isActive) 
-    {
+    function getConversationDetails(bytes32 _conversationId) external view returns (bytes32 rootHash, bool isActive) {
         ChatInfo memory chat = conversations[_conversationId];
         return (chat.rootHash, chat.isActive);
     }

@@ -11,7 +11,7 @@ contract GigMarketplace {
         address hiredArtisan;
         uint256 paymentId;
         bytes32 databaseId;
-        bytes32 rootHash;   // Single root hash for all gig data
+        bytes32 rootHash; // Single root hash for all gig data
         bool artisanComplete;
         bool isCompleted;
         bool isClosed;
@@ -19,7 +19,7 @@ contract GigMarketplace {
 
     Registry public registry;
     PaymentProcessor public paymentProcessor;
-    
+
     mapping(uint256 => GigInfo) public gigs;
     mapping(bytes32 => uint256) public indexes; // Inverse mapping of gig indexes by databaseId for quick reference
     uint256 public gigCounter;
@@ -39,10 +39,10 @@ contract GigMarketplace {
 
     function createGig(bytes32 _rootHash, bytes32 _databaseId, uint256 _budget) external {
         require(registry.userTypes(msg.sender) == Registry.UserType.Client, "Not a client");
-        
+
         gigCounter++;
         paymentProcessor.createPayment(msg.sender, _budget);
-        
+
         gigs[gigCounter] = GigInfo({
             client: msg.sender,
             gigApplicants: new address[](0),
@@ -66,7 +66,7 @@ contract GigMarketplace {
         GigInfo storage gig = gigs[thisGigId];
         require(msg.sender == gig.client, "Not gig owner");
         require(!gig.isCompleted && !gig.isClosed, "Gig finished");
-        
+
         gig.rootHash = _newRootHash;
         emit GigStateUpdated(thisGigId, _newRootHash);
     }
@@ -113,31 +113,28 @@ contract GigMarketplace {
         require(!gig.artisanComplete, "Already marked");
 
         gig.artisanComplete = true;
-        
+
         emit ArtisanMarkCompleted(thisGigId);
     }
 
     function confirmComplete(bytes32 _databaseId) external {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
-        
+
         require(thisGigId <= gigCounter, "Invalid gig ID");
         require(msg.sender == gig.client, "Not gig owner");
-        require(
-            gig.artisanComplete && !gig.isCompleted && !gig.isClosed,
-            "Gig not completed || Closed"
-        );
+        require(gig.artisanComplete && !gig.isCompleted && !gig.isClosed, "Gig not completed || Closed");
 
         gig.isCompleted = true;
         paymentProcessor.releaseArtisanFunds(gig.hiredArtisan, gig.paymentId);
-        
+
         emit ClientConfirmCompleted(thisGigId);
     }
 
     function closeGig(bytes32 _databaseId) external {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
-        
+
         require(thisGigId <= gigCounter, "Invalid gig ID");
         require(msg.sender == gig.client, "Not gig owner");
         require(gig.hiredArtisan == address(0), "Cannot close active gig");

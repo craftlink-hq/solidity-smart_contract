@@ -40,12 +40,7 @@ contract PaymentProcessor {
         token.transferFrom(_client, address(this), _amount);
         paymentId++;
 
-        payments[paymentId] = Payment({
-            client: _client,
-            amount: _amount,
-            platformFee: platformFee,
-            isReleased: false
-        });
+        payments[paymentId] = Payment({client: _client, amount: _amount, platformFee: platformFee, isReleased: false});
 
         emit PaymentCreated(paymentId, _client, _amount);
     }
@@ -80,7 +75,7 @@ contract PaymentProcessor {
         emit PaymentRefunded(_paymentId, payment.amount);
     }
 
-    function updatePlatformFee(uint256 _newFeePercentage) external  {
+    function updatePlatformFee(uint256 _newFeePercentage) external {
         require(msg.sender == platformWallet, "Only the platform wallet can update the fee");
         require(_newFeePercentage <= 20, "Fee percentage must be between 0 and 20");
 
@@ -88,19 +83,13 @@ contract PaymentProcessor {
         emit PlatformFeeUpdated(_newFeePercentage);
     }
 
-    function getPaymentDetails(uint256 _paymentId) external view returns (
-        address client,
-        uint256 amount,
-        uint256 platformFee,
-        bool isReleased
-    ) {
+    function getPaymentDetails(uint256 _paymentId)
+        external
+        view
+        returns (address client, uint256 amount, uint256 platformFee, bool isReleased)
+    {
         Payment storage payment = payments[_paymentId];
-        return (
-            payment.client,
-            payment.amount,
-            payment.platformFee,
-            payment.isReleased
-        );
+        return (payment.client, payment.amount, payment.platformFee, payment.isReleased);
     }
 
     function getClientAmountSpent(address _client) external view returns (uint256) {
