@@ -1,5 +1,5 @@
 [profile.default]
-src = "src"
+src = ["src", "src/v1", "src/v2"]
 out = "out"
 libs = ["lib"]
 

@@ -3,12 +3,12 @@ pragma solidity ^0.8.20;
 
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
-import {Registry} from "../src/Registry.sol";
-import {Token} from "../src/Token.sol";
-import {PaymentProcessor} from "../src/PaymentProcessor.sol";
-import {GigMarketplace} from "../src/GigMarketplace.sol";
-import {ReviewSystem} from "../src/ReviewSystem.sol";
-import {ChatSystem} from "../src/ChatSystem.sol";
+import {Registry} from "../src/v1/Registry.sol";
+import {Token} from "../src/v1/Token.sol";
+import {PaymentProcessor} from "../src/v1/PaymentProcessor.sol";
+import {GigMarketplace} from "../src/v1/GigMarketplace.sol";
+import {ReviewSystem} from "../src/v1/ReviewSystem.sol";
+import {ChatSystem} from "../src/v1/ChatSystem.sol";
 
 contract DeployScript is Script {
     function run() external {
