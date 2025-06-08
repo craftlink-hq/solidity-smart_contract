@@ -30,7 +30,7 @@ contract CraftCoin is ERC20, Ownable {
 
     function mint() external {
         require(registry.isArtisan(msg.sender), "Not an artisan");
-        require(block.timestamp >= lastMint[msg.sender] + MINT_INTERVAL, "Cannot mint yet");
+        require(block.timestamp >= nextMintTime(msg.sender), "Cannot mint yet");
 
         _mint(msg.sender, TOKENS_PER_MINT);
         lastMint[msg.sender] = block.timestamp;
@@ -38,14 +38,14 @@ contract CraftCoin is ERC20, Ownable {
         emit Minted(msg.sender, TOKENS_PER_MINT);
     }
 
-    function mintFor(address user) external onlyRelayer {
-        require(registry.isArtisan(user), "Not an artisan");
-        require(block.timestamp >= lastMint[user] + MINT_INTERVAL, "Cannot mint yet");
+    function mintFor(address _user) external onlyRelayer {
+        require(registry.isArtisan(_user), "Not an artisan");
+        require(block.timestamp >= nextMintTime(_user), "Cannot mint yet");
 
-        _mint(user, TOKENS_PER_MINT);
-        lastMint[user] = block.timestamp;
+        _mint(_user, TOKENS_PER_MINT);
+        lastMint[_user] = block.timestamp;
         
-        emit Minted(user, TOKENS_PER_MINT);
+        emit Minted(_user, TOKENS_PER_MINT);
     }
 
     function burn(uint256 amount) external {
@@ -53,12 +53,12 @@ contract CraftCoin is ERC20, Ownable {
         emit Burned(msg.sender, amount);
     }
 
-    function burnFor(address user, uint256 amount) external onlyRelayer {
-        _burn(user, amount);
-        emit Burned(user, amount);
+    function burnFor(address _user, uint256 amount) external onlyRelayer {
+        _burn(_user, amount);
+        emit Burned(_user, amount);
     }
 
-    function nextMintTime(address user) external view returns (uint256) {
+    function nextMintTime(address user) public view returns (uint256) {
         if (lastMint[user] == 0) {
             return 0; // Can mint immediately if never minted before
         }
