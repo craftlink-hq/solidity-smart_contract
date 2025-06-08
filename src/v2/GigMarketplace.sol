@@ -129,7 +129,7 @@ contract GigMarketplace {
         require(registry.isArtisanVerified(_artisan), "Unverified artisan");
         require(!gig.isClosed, "Gig is closed");
         require(gig.hiredArtisan == address(0), "Artisan already hired");
-        require(!_isApplicant(thisGigId, msg.sender), "Already applied");
+        require(!_isApplicant(thisGigId, _artisan), "Already applied");
 
         gig.gigApplicants.push(_artisan);
         emit GigApplicationSubmitted(thisGigId, _artisan);

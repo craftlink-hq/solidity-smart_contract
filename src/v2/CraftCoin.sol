@@ -31,16 +31,20 @@ contract CraftCoin is ERC20, Ownable {
     function mint() external {
         require(registry.isArtisan(msg.sender), "Not an artisan");
         require(block.timestamp >= lastMint[msg.sender] + MINT_INTERVAL, "Cannot mint yet");
+
         _mint(msg.sender, TOKENS_PER_MINT);
         lastMint[msg.sender] = block.timestamp;
+
         emit Minted(msg.sender, TOKENS_PER_MINT);
     }
 
     function mintFor(address user) external onlyRelayer {
         require(registry.isArtisan(user), "Not an artisan");
         require(block.timestamp >= lastMint[user] + MINT_INTERVAL, "Cannot mint yet");
+
         _mint(user, TOKENS_PER_MINT);
         lastMint[user] = block.timestamp;
+        
         emit Minted(user, TOKENS_PER_MINT);
     }
 

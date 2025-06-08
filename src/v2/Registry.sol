@@ -41,7 +41,7 @@ contract Registry {
     }
 
     function registerAsArtisan(string memory _ipfsHash) external {
-        require(userTypes[msg.sender] == UserType.Artisan, "User already registered as an artisan");
+        require(userTypes[msg.sender] != UserType.Artisan, "User already registered as an artisan");
 
         artisans[msg.sender] = Artisan({ipfsHash: _ipfsHash, isVerified: false, registrationDate: block.timestamp});
 
@@ -62,7 +62,7 @@ contract Registry {
     }
 
     function registerAsArtisanFor(address _user, string memory _ipfsHash) external onlyRelayer {
-        require(userTypes[_user] == UserType.Artisan, "User already registered as an artisan");
+        require(userTypes[_user] != UserType.Artisan, "User already registered as an artisan");
 
         artisans[_user] = Artisan({ipfsHash: _ipfsHash, isVerified: false, registrationDate: block.timestamp});
         userTypes[_user] = UserType.Artisan;
@@ -74,7 +74,7 @@ contract Registry {
     }
 
     function registerAsClientFor(address _user, string memory _ipfsHash) external onlyRelayer {
-        require(userTypes[_user] == UserType.Client, "User already registered as a client");
+        require(userTypes[_user] != UserType.Client, "User already registered as a client");
         clients[_user] = Client({ipfsHash: _ipfsHash, registrationDate: block.timestamp});
 
         userTypes[_user] = UserType.Client;

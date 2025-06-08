@@ -21,7 +21,11 @@ contract ReviewSystem {
     mapping(address => ReviewInfo[]) public clientReviews;
     address public immutable relayer;
 
-    event ReviewSubmitted(
+    event ReviewSubmittedByArtisan(
+        address indexed reviewer, address indexed reviewee, bytes32 indexed databaseId, uint256 rating
+    );
+
+    event ReviewSubmittedByClient(
         address indexed reviewer, address indexed reviewee, bytes32 indexed databaseId, uint256 rating
     );
 
@@ -56,7 +60,7 @@ contract ReviewSystem {
         });
 
         artisanReviews[hiredArtisan].push(newReview);
-        emit ReviewSubmitted(msg.sender, hiredArtisan, _databaseId, _rating);
+        emit ReviewSubmittedByClient(msg.sender, hiredArtisan, _databaseId, _rating);
     }
 
     function clientSubmitReviewFor(address _reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash)
@@ -82,7 +86,7 @@ contract ReviewSystem {
         });
 
         artisanReviews[hiredArtisan].push(newReview);
-        emit ReviewSubmitted(_reviewer, hiredArtisan, _databaseId, _rating);
+        emit ReviewSubmittedByClient(_reviewer, hiredArtisan, _databaseId, _rating);
     }
 
     function artisanSubmitReview(bytes32 _databaseId, uint256 _rating, string memory _commentHash) external {
@@ -105,7 +109,7 @@ contract ReviewSystem {
         });
 
         clientReviews[client].push(newReview);
-        emit ReviewSubmitted(msg.sender, client, _databaseId, _rating);
+        emit ReviewSubmittedByArtisan(msg.sender, client, _databaseId, _rating);
     }
 
     function artisanSubmitReviewFor(address reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash)
@@ -131,7 +135,7 @@ contract ReviewSystem {
         });
 
         clientReviews[client].push(newReview);
-        emit ReviewSubmitted(reviewer, client, _databaseId, _rating);
+        emit ReviewSubmittedByArtisan(reviewer, client, _databaseId, _rating);
     }
 
     function getArtisanReviewInfos(address _artisan) external view returns (ReviewInfo[] memory) {
