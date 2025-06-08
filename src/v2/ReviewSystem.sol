@@ -18,17 +18,24 @@ contract ReviewSystem {
     }
 
     mapping(address => ReviewInfo[]) public artisanReviews;
+    address public immutable relayer;
 
     event ReviewSubmitted(
         address indexed reviewer, address indexed reviewee, bytes32 indexed databaseId, uint256 rating
     );
 
-    constructor(address _registryAddress, address _gigMarketplaceAddress) {
+    modifier onlyRelayer() {
+        require(msg.sender == relayer, "Caller is not the relayer");
+        _;
+    }
+
+    constructor(address _relayer, address _registryAddress, address _gigMarketplaceAddress) {
+        relayer = _relayer;
         registry = Registry(_registryAddress);
         gigMarketplace = GigMarketplace(_gigMarketplaceAddress);
     }
 
-    function submitReview(bytes32 _databaseId, uint256 _rating, string memory _commentHash) external {
+    function clientSubmitReview(bytes32 _databaseId, uint256 _rating, string memory _commentHash) external {
         require(_rating >= 1 && _rating <= 5, "Rating must be between 1 and 5");
 
         (address client, address hiredArtisan,,,, bool isCompleted, bool isClosed) =
@@ -49,6 +56,29 @@ contract ReviewSystem {
 
         artisanReviews[hiredArtisan].push(newReview);
         emit ReviewSubmitted(msg.sender, hiredArtisan, _databaseId, _rating);
+    }
+
+    function clientSubmitReviewFor(address reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash) external onlyRelayer {
+        require(_rating >= 1 && _rating <= 5, "Rating must be between 1 and 5");
+
+        (address client, address hiredArtisan,,,, bool isCompleted, bool isClosed) =
+            gigMarketplace.getGigInfo(_databaseId);
+
+        require(reviewer == client, "Only the client can submit a review");
+        require(isCompleted, "Gig must be completed before submitting a review");
+        require(!isClosed, "Cannot review a closed gig");
+
+        ReviewInfo memory newReview = ReviewInfo({
+            reviewer: reviewer,
+            reviewee: hiredArtisan,
+            databaseId: _databaseId,
+            rating: _rating,
+            commentHash: _commentHash,
+            timestamp: block.timestamp
+        });
+
+        artisanReviews[hiredArtisan].push(newReview);
+        emit ReviewSubmitted(reviewer, hiredArtisan, _databaseId, _rating);
     }
 
     function getArtisanReviewInfos(address _artisan) external view returns (ReviewInfo[] memory) {
