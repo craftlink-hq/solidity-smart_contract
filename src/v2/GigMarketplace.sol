@@ -19,6 +19,7 @@ contract GigMarketplace {
 
     Registry public registry;
     PaymentProcessor public paymentProcessor;
+    address public immutable relayer;
 
     mapping(uint256 => GigInfo) public gigs;
     mapping(bytes32 => uint256) public indexes; // Inverse mapping of gig indexes by databaseId for quick reference
@@ -32,7 +33,13 @@ contract GigMarketplace {
     event ClientConfirmCompleted(uint256 indexed gigId);
     event GigClosed(uint256 indexed gigId);
 
-    constructor(address _registry, address _paymentProcessor) {
+    modifier onlyRelayer() {
+        require(msg.sender == relayer, "Caller is not the relayer");
+        _;
+    }
+
+    constructor(address _relayer, address _registry, address _paymentProcessor) {
+        relayer = _relayer;
         registry = Registry(_registry);
         paymentProcessor = PaymentProcessor(_paymentProcessor);
     }
@@ -58,6 +65,28 @@ contract GigMarketplace {
         indexes[_databaseId] = gigCounter;
 
         emit GigCreated(gigCounter, msg.sender, _rootHash);
+    }
+
+    function createGigFor(address _client, bytes32 _rootHash, bytes32 _databaseId, uint256 _budget) external onlyRelayer {
+        require(registry.userTypes(_client) == Registry.UserType.Client, "Not a client");
+
+        gigCounter++;
+        paymentProcessor.createPayment(_client, _budget);
+
+        gigs[gigCounter] = GigInfo({
+            client: _client,
+            gigApplicants: new address[](0),
+            hiredArtisan: address(0),
+            paymentId: paymentProcessor.currentPaymentId(),
+            databaseId: _databaseId,
+            rootHash: _rootHash,
+            artisanComplete: false,
+            isCompleted: false,
+            isClosed: false
+        });
+        
+        indexes[_databaseId] = gigCounter;
+        emit GigCreated(gigCounter, _client, _rootHash);
     }
 
     function updateGigInfo(bytes32 _databaseId, bytes32 _newRootHash) external {
@@ -126,7 +155,6 @@ contract GigMarketplace {
         require(gig.artisanComplete && !gig.isCompleted && !gig.isClosed, "Gig not completed || Closed");
 
         gig.isCompleted = true;
-        paymentProcessor.releaseArtisanFunds(gig.hiredArtisan, gig.paymentId);
 
         emit ClientConfirmCompleted(thisGigId);
     }
