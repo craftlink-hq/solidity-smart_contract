@@ -34,11 +34,11 @@ contract Token is ERC20, Ownable {
         _mint(msg.sender, CLAIM_AMOUNT);
     }
     
-    function claimFor(address user) external onlyRelayer {
-        require(!hasClaimed[user], "Already claimed");
+    function claimFor(address _user) external onlyRelayer {
+        require(!hasClaimed[_user], "Already claimed");
 
-        hasClaimed[user] = true;
-        _mint(user, CLAIM_AMOUNT);
+        hasClaimed[_user] = true;
+        _mint(_user, CLAIM_AMOUNT);
     }
 
     function mint(address to, uint256 amount) external onlyOwner {

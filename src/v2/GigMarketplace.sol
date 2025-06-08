@@ -202,6 +202,16 @@ contract GigMarketplace {
         emit ClientConfirmCompleted(thisGigId);
     }
 
+    function confirmCompleteFor(address _client, bytes32 _databaseId) external onlyRelayer {
+        uint256 thisGigId = indexes[_databaseId];
+        GigInfo storage gig = gigs[thisGigId];
+        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(_client == gig.client, "Not gig owner");
+        require(gig.artisanComplete && !gig.isCompleted && !gig.isClosed, "Gig not completed || Closed");
+        gig.isCompleted = true;
+        emit ClientConfirmCompleted(thisGigId);
+    }
+
     function closeGig(bytes32 _databaseId) external {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
