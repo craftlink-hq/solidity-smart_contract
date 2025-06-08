@@ -19,13 +19,20 @@ contract PaymentProcessor {
     mapping(address => uint256) internal amountSpent;
     mapping(address => uint256) internal amountMade;
     uint256 public paymentId;
+    address public immutable relayer;
 
     event PaymentCreated(uint256 indexed paymentId, address indexed client, uint256 amount);
     event PaymentReleased(uint256 indexed paymentId, uint256 amountToArtisan, uint256 platformFee);
     event PaymentRefunded(uint256 indexed paymentId, uint256 amountToClient);
     event PlatformFeeUpdated(uint256 newFeePercentage);
 
-    constructor(address _tokenAddress) {
+    modifier onlyRelayer() {
+        require(msg.sender == relayer, "Caller is not the relayer");
+        _;
+    }
+
+    constructor(address _relayer, address _tokenAddress) {
+        relayer = _relayer;
         token = Token(_tokenAddress);
         platformFeePercentage = 5; // 5%
         platformWallet = msg.sender;
@@ -61,6 +68,22 @@ contract PaymentProcessor {
 
         amountSpent[payment.client] = amountSpent[payment.client] + payment.amount;
         amountMade[_artisan] = amountMade[_artisan] + payment.amount;
+
+        emit PaymentReleased(_paymentId, amountToArtisan, payment.platformFee);
+    }
+
+    function releaseArtisanFundsFor(address artisan, uint256 _paymentId) external onlyRelayer {
+        Payment storage payment = payments[_paymentId];
+        require(!payment.isReleased, "Payment already released");
+
+        payment.isReleased = true;
+        uint256 amountToArtisan = payment.amount - payment.platformFee;
+
+        token.transfer(artisan, amountToArtisan);
+        token.transfer(platformWallet, payment.platformFee);
+
+        amountSpent[payment.client] = amountSpent[payment.client] + payment.amount;
+        amountMade[artisan] = amountMade[artisan] + payment.amount;
 
         emit PaymentReleased(_paymentId, amountToArtisan, payment.platformFee);
     }
