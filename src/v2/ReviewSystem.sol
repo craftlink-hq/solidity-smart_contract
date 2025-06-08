@@ -18,6 +18,7 @@ contract ReviewSystem {
     }
 
     mapping(address => ReviewInfo[]) public artisanReviews;
+    mapping(address => ReviewInfo[]) public clientReviews;
     address public immutable relayer;
 
     event ReviewSubmitted(
@@ -58,18 +59,18 @@ contract ReviewSystem {
         emit ReviewSubmitted(msg.sender, hiredArtisan, _databaseId, _rating);
     }
 
-    function clientSubmitReviewFor(address reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash) external onlyRelayer {
+    function clientSubmitReviewFor(address _reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash) external onlyRelayer {
         require(_rating >= 1 && _rating <= 5, "Rating must be between 1 and 5");
 
         (address client, address hiredArtisan,,,, bool isCompleted, bool isClosed) =
             gigMarketplace.getGigInfo(_databaseId);
 
-        require(reviewer == client, "Only the client can submit a review");
+        require(_reviewer == client, "Only the client can submit a review");
         require(isCompleted, "Gig must be completed before submitting a review");
         require(!isClosed, "Cannot review a closed gig");
 
         ReviewInfo memory newReview = ReviewInfo({
-            reviewer: reviewer,
+            reviewer: _reviewer,
             reviewee: hiredArtisan,
             databaseId: _databaseId,
             rating: _rating,
@@ -78,7 +79,53 @@ contract ReviewSystem {
         });
 
         artisanReviews[hiredArtisan].push(newReview);
-        emit ReviewSubmitted(reviewer, hiredArtisan, _databaseId, _rating);
+        emit ReviewSubmitted(_reviewer, hiredArtisan, _databaseId, _rating);
+    }
+
+    function artisanSubmitReview(bytes32 _databaseId, uint256 _rating, string memory _commentHash) external {
+        require(_rating >= 1 && _rating <= 5, "Rating must be between 1 and 5");
+
+        (address client, address hiredArtisan,,,, bool isCompleted, bool isClosed) =
+            gigMarketplace.getGigInfo(_databaseId);
+
+        require(msg.sender == hiredArtisan, "Only the artisan can submit a client review");
+        require(isCompleted, "Gig must be completed before submitting a review");
+        require(!isClosed, "Cannot review a closed gig");
+
+        ReviewInfo memory newReview = ReviewInfo({
+            reviewer: msg.sender,
+            reviewee: client,
+            databaseId: _databaseId,
+            rating: _rating,
+            commentHash: _commentHash,
+            timestamp: block.timestamp
+        });
+
+        clientReviews[client].push(newReview);
+        emit ReviewSubmitted(msg.sender, client, _databaseId, _rating);
+    }
+
+    function artisanSubmitReviewFor(address reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash) external onlyRelayer {
+        require(_rating >= 1 && _rating <= 5, "Rating must be between 1 and 5");
+
+        (address client, address hiredArtisan,,,, bool isCompleted, bool isClosed) =
+            gigMarketplace.getGigInfo(_databaseId);
+
+        require(reviewer == hiredArtisan, "Only the artisan can submit a client review");
+        require(isCompleted, "Gig must be completed before submitting a review");
+        require(!isClosed, "Cannot review a closed gig");
+
+        ReviewInfo memory newReview = ReviewInfo({
+            reviewer: reviewer,
+            reviewee: client,
+            databaseId: _databaseId,
+            rating: _rating,
+            commentHash: _commentHash,
+            timestamp: block.timestamp
+        });
+        
+        clientReviews[client].push(newReview);
+        emit ReviewSubmitted(reviewer, client, _databaseId, _rating);
     }
 
     function getArtisanReviewInfos(address _artisan) external view returns (ReviewInfo[] memory) {
