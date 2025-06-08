@@ -123,13 +123,17 @@ contract ReviewSystem {
             commentHash: _commentHash,
             timestamp: block.timestamp
         });
-        
+
         clientReviews[client].push(newReview);
         emit ReviewSubmitted(reviewer, client, _databaseId, _rating);
     }
 
     function getArtisanReviewInfos(address _artisan) external view returns (ReviewInfo[] memory) {
         return artisanReviews[_artisan];
+    }
+
+    function getClientReviewInfos(address _client) external view returns (ReviewInfo[] memory) {
+        return clientReviews[_client];
     }
 
     function getArtisanReviews(address _artisan) external view returns (string[] memory) {
@@ -140,6 +144,15 @@ contract ReviewSystem {
             comments[i] = reviews[i].commentHash;
         }
 
+        return comments;
+    }
+
+    function getClientReviews(address _client) external view returns (string[] memory) {
+        ReviewInfo[] memory reviews = clientReviews[_client];
+        string[] memory comments = new string[](reviews.length);
+        for (uint256 i = 0; i < reviews.length; i++) {
+            comments[i] = reviews[i].commentHash;
+        }
         return comments;
     }
 
@@ -154,6 +167,16 @@ contract ReviewSystem {
             totalRating += reviews[i].rating;
         }
 
+        return totalRating / reviews.length;
+    }
+
+    function getClientAverageRating(address _client) external view returns (uint256) {
+        ReviewInfo[] memory reviews = clientReviews[_client];
+        if (reviews.length == 0) return 0;
+        uint256 totalRating = 0;
+        for (uint256 i = 0; i < reviews.length; i++) {
+            totalRating += reviews[i].rating;
+        }
         return totalRating / reviews.length;
     }
 }
