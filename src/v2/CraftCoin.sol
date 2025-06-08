@@ -11,7 +11,7 @@ interface IRegistry {
 contract CraftCoin is ERC20, Ownable {
     IRegistry public immutable registry;
     uint256 public constant MINT_INTERVAL = 30 days;
-    uint256 public constant TOKENS_PER_MINT = 50 * 10**18;
+    uint256 public constant TOKENS_PER_MINT = 50 * 10 ** 18;
     mapping(address => uint256) public lastMint;
     address public immutable relayer;
 

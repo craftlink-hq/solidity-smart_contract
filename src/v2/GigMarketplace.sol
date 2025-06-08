@@ -67,7 +67,10 @@ contract GigMarketplace {
         emit GigCreated(gigCounter, msg.sender, _rootHash);
     }
 
-    function createGigFor(address _client, bytes32 _rootHash, bytes32 _databaseId, uint256 _budget) external onlyRelayer {
+    function createGigFor(address _client, bytes32 _rootHash, bytes32 _databaseId, uint256 _budget)
+        external
+        onlyRelayer
+    {
         require(registry.userTypes(_client) == Registry.UserType.Client, "Not a client");
 
         gigCounter++;
@@ -121,7 +124,7 @@ contract GigMarketplace {
     function applyForGigFor(address _artisan, bytes32 _databaseId) external onlyRelayer {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
-        
+
         require(thisGigId <= gigCounter, "Invalid gig ID");
         require(registry.isArtisanVerified(_artisan), "Unverified artisan");
         require(!gig.isClosed, "Gig is closed");
@@ -209,7 +212,7 @@ contract GigMarketplace {
         require(thisGigId <= gigCounter, "Invalid gig ID");
         require(_client == gig.client, "Not gig owner");
         require(gig.artisanComplete && !gig.isCompleted && !gig.isClosed, "Gig not completed || Closed");
-        
+
         gig.isCompleted = true;
         emit ClientConfirmCompleted(thisGigId);
     }

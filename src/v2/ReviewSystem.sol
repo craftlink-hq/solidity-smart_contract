@@ -59,7 +59,10 @@ contract ReviewSystem {
         emit ReviewSubmitted(msg.sender, hiredArtisan, _databaseId, _rating);
     }
 
-    function clientSubmitReviewFor(address _reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash) external onlyRelayer {
+    function clientSubmitReviewFor(address _reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash)
+        external
+        onlyRelayer
+    {
         require(_rating >= 1 && _rating <= 5, "Rating must be between 1 and 5");
 
         (address client, address hiredArtisan,,,, bool isCompleted, bool isClosed) =
@@ -105,7 +108,10 @@ contract ReviewSystem {
         emit ReviewSubmitted(msg.sender, client, _databaseId, _rating);
     }
 
-    function artisanSubmitReviewFor(address reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash) external onlyRelayer {
+    function artisanSubmitReviewFor(address reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash)
+        external
+        onlyRelayer
+    {
         require(_rating >= 1 && _rating <= 5, "Rating must be between 1 and 5");
 
         (address client, address hiredArtisan,,,, bool isCompleted, bool isClosed) =

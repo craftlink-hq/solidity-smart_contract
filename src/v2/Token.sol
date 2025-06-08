@@ -33,7 +33,7 @@ contract Token is ERC20, Ownable {
         hasClaimed[msg.sender] = true;
         _mint(msg.sender, CLAIM_AMOUNT);
     }
-    
+
     function claimFor(address _user) external onlyRelayer {
         require(!hasClaimed[_user], "Already claimed");
 
