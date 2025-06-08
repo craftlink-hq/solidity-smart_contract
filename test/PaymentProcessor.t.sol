@@ -18,22 +18,22 @@ contract PaymentProcessorTest is Test {
         vm.prank(client);
         token.claim(); // 1000 USDT
         vm.prank(client);
-        token.approve(address(paymentProcessor), 1000 * 10**6);
+        token.approve(address(paymentProcessor), 1000 * 10 ** 6);
     }
 
     function testCreatePayment() public {
         vm.prank(client);
-        paymentProcessor.createPayment(client, 100 * 10**6);
+        paymentProcessor.createPayment(client, 100 * 10 ** 6);
         (address paymentClient, uint256 amount,,) = paymentProcessor.getPaymentDetails(1);
         assertEq(paymentClient, client);
-        assertEq(amount, 100 * 10**6);
+        assertEq(amount, 100 * 10 ** 6);
     }
 
     function testReleaseFunds() public {
         vm.prank(client);
-        paymentProcessor.createPayment(client, 100 * 10**6);
+        paymentProcessor.createPayment(client, 100 * 10 ** 6);
         vm.prank(artisan);
         paymentProcessor.releaseArtisanFunds(artisan, 1);
-        assertEq(token.balanceOf(artisan), 95 * 10**6); // 5% fee
+        assertEq(token.balanceOf(artisan), 95 * 10 ** 6); // 5% fee
     }
 }

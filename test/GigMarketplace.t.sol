@@ -29,19 +29,19 @@ contract GigMarketplaceTest is Test {
         vm.prank(client);
         token.claim();
         vm.prank(client);
-        token.approve(address(paymentProcessor), 1000 * 10**6);
+        token.approve(address(paymentProcessor), 1000 * 10 ** 6);
     }
 
     function testCreateGig() public {
         vm.prank(client);
-        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10**6);
+        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
         (address gigClient,,,,,,) = gigMarketplace.getGigInfo(databaseId);
         assertEq(gigClient, client);
     }
 
     function testApplyForGig() public {
         vm.prank(client);
-        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10**6);
+        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
         vm.prank(artisan);
         gigMarketplace.applyForGig(databaseId);
         address[] memory applicants = gigMarketplace.getGigApplicants(databaseId);

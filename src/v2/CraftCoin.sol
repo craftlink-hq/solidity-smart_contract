@@ -44,7 +44,7 @@ contract CraftCoin is ERC20, Ownable {
 
         _mint(_user, TOKENS_PER_MINT);
         lastMint[_user] = block.timestamp;
-        
+
         emit Minted(_user, TOKENS_PER_MINT);
     }
 

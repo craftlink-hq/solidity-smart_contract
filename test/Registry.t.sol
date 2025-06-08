@@ -17,7 +17,7 @@ contract RegistryTest is Test {
     function testRegisterAsArtisan() public {
         vm.prank(user1);
         registry.registerAsArtisan("ipfsHash1");
-        assertEq(uint(registry.userTypes(user1)), uint(Registry.UserType.Artisan));
+        assertEq(uint256(registry.userTypes(user1)), uint256(Registry.UserType.Artisan));
         (string memory ipfsHash,,) = registry.getArtisanDetails(user1);
         assertEq(ipfsHash, "ipfsHash1");
     }
@@ -33,7 +33,7 @@ contract RegistryTest is Test {
     function testRelayerRegisterFor() public {
         vm.prank(relayer);
         registry.registerAsArtisanFor(user2, "ipfsHash2");
-        assertEq(uint(registry.userTypes(user2)), uint(Registry.UserType.Artisan));
+        assertEq(uint256(registry.userTypes(user2)), uint256(Registry.UserType.Artisan));
     }
 
     function testNonRelayerCannotRegisterFor() public {

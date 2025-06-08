@@ -33,9 +33,9 @@ contract ChatSystemTest is Test {
         vm.prank(client);
         token.claim();
         vm.prank(client);
-        token.approve(address(paymentProcessor), 1000 * 10**6);
+        token.approve(address(paymentProcessor), 1000 * 10 ** 6);
         vm.prank(client);
-        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10**6);
+        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
         vm.prank(artisan);
         gigMarketplace.applyForGig(databaseId);
         vm.prank(client);

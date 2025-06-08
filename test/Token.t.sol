@@ -16,7 +16,7 @@ contract TokenTest is Test {
     function testClaim() public {
         vm.prank(user1);
         token.claim();
-        assertEq(token.balanceOf(user1), 1000 * 10**6);
+        assertEq(token.balanceOf(user1), 1000 * 10 ** 6);
     }
 
     function testCannotClaimTwice() public {
@@ -30,6 +30,6 @@ contract TokenTest is Test {
     function testClaimFor() public {
         vm.prank(relayer);
         token.claimFor(user1);
-        assertEq(token.balanceOf(user1), 1000 * 10**6);
+        assertEq(token.balanceOf(user1), 1000 * 10 ** 6);
     }
 }

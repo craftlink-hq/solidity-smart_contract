@@ -17,7 +17,7 @@ contract CraftCoinTest is Test {
 
         // vm.prank(artisan);
         // registry.registerAsArtisan("ipfsHash");
-        
+
         vm.prank(relayer);
         registry.registerAsArtisanFor(artisan, "ipfsHash");
     }
@@ -26,7 +26,7 @@ contract CraftCoinTest is Test {
         vm.prank(artisan);
 
         craftCoin.mint();
-        assertEq(craftCoin.balanceOf(artisan), 50 * 10**18);
+        assertEq(craftCoin.balanceOf(artisan), 50 * 10 ** 18);
     }
 
     function testCannotMintBeforeInterval() public {
@@ -36,7 +36,7 @@ contract CraftCoinTest is Test {
         vm.warp(block.timestamp + 29 days);
         vm.prank(artisan);
         vm.expectRevert("Cannot mint yet");
-        
+
         craftCoin.mint();
     }
 }
