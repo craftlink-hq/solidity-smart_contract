@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+interface IRegistry {
+    function isArtisan(address) external view returns (bool);
+}
+
+contract CraftCoin is ERC20, Ownable {
+    IRegistry public immutable registry;
+    uint256 public constant MINT_INTERVAL = 30 days;
+    uint256 public constant TOKENS_PER_MINT = 50 * 10**18;
+    mapping(address => uint256) public lastMint;
+    address public immutable relayer;
+
+    event Minted(address indexed user, uint256 amount);
+    event Burned(address indexed user, uint256 amount);
+
+    modifier onlyRelayer() {
+        require(msg.sender == relayer, "Caller is not the relayer");
+        _;
+    }
+
+    constructor(address _relayer, address _registry) ERC20("CraftCoin", "CFT") Ownable(msg.sender) {
+        relayer = _relayer;
+        registry = IRegistry(_registry);
+    }
+
+    function mint() external {
+        require(registry.isArtisan(msg.sender), "Not an artisan");
+        require(block.timestamp >= lastMint[msg.sender] + MINT_INTERVAL, "Cannot mint yet");
+        _mint(msg.sender, TOKENS_PER_MINT);
+        lastMint[msg.sender] = block.timestamp;
+        emit Minted(msg.sender, TOKENS_PER_MINT);
+    }
+
+    function mintFor(address user) external onlyRelayer {
+        require(registry.isArtisan(user), "Not an artisan");
+        require(block.timestamp >= lastMint[user] + MINT_INTERVAL, "Cannot mint yet");
+        _mint(user, TOKENS_PER_MINT);
+        lastMint[user] = block.timestamp;
+        emit Minted(user, TOKENS_PER_MINT);
+    }
+
+    function burn(uint256 amount) external {
+        _burn(msg.sender, amount);
+        emit Burned(msg.sender, amount);
+    }
+
+    function burnFor(address user, uint256 amount) external onlyRelayer {
+        _burn(user, amount);
+        emit Burned(user, amount);
+    }
+
+    function nextMintTime(address user) external view returns (uint256) {
+        if (lastMint[user] == 0) {
+            return 0; // Can mint immediately if never minted before
+        }
+        return lastMint[user] + MINT_INTERVAL;
+    }
+}
