@@ -176,6 +176,19 @@ contract GigMarketplace {
         emit ArtisanMarkCompleted(thisGigId);
     }
 
+    function markCompleteFor(address _artisan, bytes32 _databaseId) external onlyRelayer {
+        uint256 thisGigId = indexes[_databaseId];
+        GigInfo storage gig = gigs[thisGigId];
+
+        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(_artisan == gig.hiredArtisan, "Not hired artisan");
+        require(!gig.isCompleted && !gig.isClosed, "Gig finished");
+        require(!gig.artisanComplete, "Already marked");
+
+        gig.artisanComplete = true;
+        emit ArtisanMarkCompleted(thisGigId);
+    }
+
     function confirmComplete(bytes32 _databaseId) external {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
