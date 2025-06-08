@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Token is ERC20, Ownable {
+    address public immutable relayer;
     string _name = "USD Tethers";
     string _symbol = "USDT";
     uint8 _decimals = 6;
@@ -12,7 +13,13 @@ contract Token is ERC20, Ownable {
     uint256 public constant CLAIM_AMOUNT = 1000 * 10 ** 6;
     mapping(address => bool) public hasClaimed;
 
-    constructor() ERC20(_name, _symbol) Ownable(msg.sender) {
+    modifier onlyRelayer() {
+        require(msg.sender == relayer, "Caller is not the relayer");
+        _;
+    }
+
+    constructor(address _relayer) ERC20(_name, _symbol) Ownable(msg.sender) {
+        relayer = _relayer;
         // _mint(msg.sender, initialSupply * 10**18);
     }
 
@@ -27,9 +34,9 @@ contract Token is ERC20, Ownable {
         _mint(msg.sender, CLAIM_AMOUNT);
     }
     
-    function claimFor(address user) external onlyOwner {
+    function claimFor(address user) external onlyRelayer {
         require(!hasClaimed[user], "Already claimed");
-        
+
         hasClaimed[user] = true;
         _mint(user, CLAIM_AMOUNT);
     }

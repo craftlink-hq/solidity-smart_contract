@@ -25,13 +25,23 @@ contract Registry {
 
     address[] public artisanAddresses;
     address[] public clientAddresses;
+    address public immutable relayer;
+
+    modifier onlyRelayer() {
+        require(msg.sender == relayer, "Caller is not the relayer");
+        _;
+    }
 
     event ArtisanRegistered(address indexed artisanAddress, string ipfsHash);
     event ClientRegistered(address indexed clientAddress, string ipfsHash);
     event ArtisanVerified(address indexed artisanAddress);
 
+    constructor(address _relayer) {
+        relayer = _relayer;
+    }
+
     function registerAsArtisan(string memory _ipfsHash) external {
-        require(userTypes[msg.sender] == UserType.None, "User already registered");
+        require(userTypes[msg.sender] == UserType.Artisan, "User already registered as an artisan");
 
         artisans[msg.sender] = Artisan({ipfsHash: _ipfsHash, isVerified: false, registrationDate: block.timestamp});
 
@@ -42,13 +52,35 @@ contract Registry {
     }
 
     function registerAsClient(string memory _ipfsHash) external {
-        require(userTypes[msg.sender] == UserType.None, "User already registered");
+        require(userTypes[msg.sender] != UserType.Client, "User already registered as a client");
 
         clients[msg.sender] = Client({ipfsHash: _ipfsHash, registrationDate: block.timestamp});
 
         userTypes[msg.sender] = UserType.Client;
         clientAddresses.push(msg.sender);
         emit ClientRegistered(msg.sender, _ipfsHash);
+    }
+
+    function registerAsArtisanFor(address user, string memory _ipfsHash) external onlyRelayer {
+        require(userTypes[user] == UserType.Artisan, "User already registered as an artisan");
+
+        artisans[user] = Artisan({ipfsHash: _ipfsHash, isVerified: false, registrationDate: block.timestamp});
+        userTypes[user] = UserType.Artisan;
+
+        artisanAddresses.push(user);
+        verifyArtisan(user);
+
+        emit ArtisanRegistered(user, _ipfsHash);
+    }
+
+    function registerAsClientFor(address user, string memory _ipfsHash) external onlyRelayer {
+        require(userTypes[user] == UserType.Client, "User already registered as a client");
+        clients[user] = Client({ipfsHash: _ipfsHash, registrationDate: block.timestamp});
+        
+        userTypes[user] = UserType.Client;
+        clientAddresses.push(user);
+
+        emit ClientRegistered(user, _ipfsHash);
     }
 
     function verifyArtisan(address _artisanAddress) internal {
