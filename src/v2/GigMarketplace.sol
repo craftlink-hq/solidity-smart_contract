@@ -84,7 +84,7 @@ contract GigMarketplace {
             isCompleted: false,
             isClosed: false
         });
-        
+
         indexes[_databaseId] = gigCounter;
         emit GigCreated(gigCounter, _client, _rootHash);
     }
@@ -112,9 +112,24 @@ contract GigMarketplace {
         require(registry.isArtisanVerified(msg.sender), "Unverified artisan");
         require(!gig.isClosed, "Gig is closed");
         require(gig.hiredArtisan == address(0), "Artisan already hired");
+        require(!_isApplicant(thisGigId, msg.sender), "Already applied");
 
         gig.gigApplicants.push(msg.sender);
         emit GigApplicationSubmitted(thisGigId, msg.sender);
+    }
+
+    function applyForGigFor(address _artisan, bytes32 _databaseId) external onlyRelayer {
+        uint256 thisGigId = indexes[_databaseId];
+        GigInfo storage gig = gigs[thisGigId];
+        
+        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(registry.isArtisanVerified(_artisan), "Unverified artisan");
+        require(!gig.isClosed, "Gig is closed");
+        require(gig.hiredArtisan == address(0), "Artisan already hired");
+        require(!_isApplicant(thisGigId, msg.sender), "Already applied");
+
+        gig.gigApplicants.push(_artisan);
+        emit GigApplicationSubmitted(thisGigId, _artisan);
     }
 
     function hireArtisan(bytes32 _databaseId, address _artisan) external {
@@ -123,6 +138,21 @@ contract GigMarketplace {
 
         require(thisGigId <= gigCounter, "Invalid gig ID");
         require(msg.sender == gig.client, "Not gig owner");
+        require(gig.hiredArtisan == address(0), "Artisan already hired");
+        require(!gig.isClosed, "Gig is closed");
+        require(_isApplicant(thisGigId, _artisan), "Not an applicant");
+
+        gig.hiredArtisan = _artisan;
+
+        emit ArtisanHired(thisGigId, _artisan);
+    }
+
+    function hireArtisanFor(address _client, bytes32 _databaseId, address _artisan) external onlyRelayer {
+        uint256 thisGigId = indexes[_databaseId];
+        GigInfo storage gig = gigs[thisGigId];
+
+        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(_client == gig.client, "Not gig owner");
         require(gig.hiredArtisan == address(0), "Artisan already hired");
         require(!gig.isClosed, "Gig is closed");
         require(_isApplicant(thisGigId, _artisan), "Not an applicant");
