@@ -15,10 +15,12 @@ contract PaymentProcessorTest is Test {
     function setUp() public {
         token = new Token(relayer);
         paymentProcessor = new PaymentProcessor(relayer, address(token));
-        vm.prank(client);
+        
+        vm.startPrank(client);
         token.claim(); // 1000 USDT
-        vm.prank(client);
         token.approve(address(paymentProcessor), 1000 * 10 ** 6);
+        vm.stopPrank();
+        
     }
 
     function testCreatePayment() public {

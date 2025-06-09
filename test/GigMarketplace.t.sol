@@ -6,40 +6,55 @@ import "../src/v2/GigMarketplace.sol";
 import "../src/v2/Registry.sol";
 import "../src/v2/PaymentProcessor.sol";
 import "../src/v2/Token.sol";
+import "../src/v2/CraftCoin.sol";
 
 contract GigMarketplaceTest is Test {
     Registry registry;
     Token token;
     PaymentProcessor paymentProcessor;
     GigMarketplace gigMarketplace;
+    CraftCoin craftCoin;
+
     address relayer = address(0x1);
     address client = address(0x2);
     address client2 = address(0x3);
     address artisan = address(0x4);
     address artisan2 = address(0x5);
+
     bytes32 databaseId = keccak256("databaseId");
 
     function setUp() public {
         registry = new Registry(relayer);
         token = new Token(relayer);
         paymentProcessor = new PaymentProcessor(relayer, address(token));
-        gigMarketplace = new GigMarketplace(relayer, address(registry), address(paymentProcessor));
-        vm.prank(client);
+        craftCoin = new CraftCoin(relayer, address(registry));
+        gigMarketplace = new GigMarketplace(relayer, address(registry), address(paymentProcessor), address(craftCoin));
+
+        vm.startPrank(client);
         registry.registerAsClient("clientIpfs");
-        vm.prank(client2);
+        token.claim();
+        token.approve(address(paymentProcessor), 1000 * 10 ** 6);
+        vm.stopPrank();
+        
+        vm.startPrank(client2);
         registry.registerAsClient("client2Ipfs");
-        vm.prank(artisan);
+        token.claim();
+        token.approve(address(paymentProcessor), 1000 * 10 ** 6);
+        vm.stopPrank();
+
+        vm.startPrank(artisan);
         registry.registerAsArtisan("artisanIpfs");
-        vm.prank(artisan2);
+        craftCoin.mint();
+        uint256 artisanBalance = craftCoin.balanceOf(artisan);
+        craftCoin.approve(address(gigMarketplace), artisanBalance);
+        vm.stopPrank();
+
+        vm.startPrank(artisan2);
         registry.registerAsArtisan("artisan2Ipfs");
-        vm.prank(client);
-        token.claim();
-        vm.prank(client2);
-        token.claim();
-        vm.prank(client);
-        token.approve(address(paymentProcessor), 1000 * 10 ** 6);
-        vm.prank(client2);
-        token.approve(address(paymentProcessor), 1000 * 10 ** 6);
+        craftCoin.mint();
+        uint256 artisan2Balance = craftCoin.balanceOf(artisan2);
+        craftCoin.approve(address(gigMarketplace), artisan2Balance);
+        vm.stopPrank();
     }
 
     function testCreateGig() public {

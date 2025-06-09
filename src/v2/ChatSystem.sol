@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./GigMarketplace.sol";
+import "./interfaces/IGigMarketplace.sol";
 
 contract ChatSystem {
     struct ChatInfo {
@@ -9,14 +9,14 @@ contract ChatSystem {
         bool isActive;
     }
 
-    GigMarketplace public gigMarketplace;
+    IGigMarketplace public immutable gigMarketplace;
     mapping(bytes32 => ChatInfo) public conversations;
 
     event ConversationStarted(bytes32 indexed conversationId, bytes32 rootHash);
     event ConversationUpdated(bytes32 indexed conversationId, bytes32 newRootHash);
 
     constructor(address _gigMarketplace) {
-        gigMarketplace = GigMarketplace(_gigMarketplace);
+        gigMarketplace = IGigMarketplace(_gigMarketplace);
     }
 
     function startConversation(bytes32 _conversationId, bytes32 _databaseId, bytes32 _initialRootHash) external {

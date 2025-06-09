@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./Registry.sol";
-import "./GigMarketplace.sol";
+import "./interfaces/IRegistry.sol";
+import "./interfaces/IGigMarketplace.sol";
 
 contract ReviewSystem {
-    Registry public registry;
-    GigMarketplace public gigMarketplace;
+    IRegistry public registry;
+    IGigMarketplace public gigMarketplace;
 
     struct ReviewInfo {
         address reviewer;
@@ -36,8 +36,8 @@ contract ReviewSystem {
 
     constructor(address _relayer, address _registryAddress, address _gigMarketplaceAddress) {
         relayer = _relayer;
-        registry = Registry(_registryAddress);
-        gigMarketplace = GigMarketplace(_gigMarketplaceAddress);
+        registry = IRegistry(_registryAddress);
+        gigMarketplace = IGigMarketplace(_gigMarketplaceAddress);
     }
 
     function clientSubmitReview(bytes32 _databaseId, uint256 _rating, string memory _commentHash) external {

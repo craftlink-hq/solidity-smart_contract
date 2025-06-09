@@ -3,10 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-interface IRegistry {
-    function isArtisan(address) external view returns (bool);
-}
+import "./interfaces/IRegistry.sol";
 
 contract CraftCoin is ERC20, Ownable {
     IRegistry public immutable registry;

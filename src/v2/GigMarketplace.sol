@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./Registry.sol";
-import "./PaymentProcessor.sol";
+import "./interfaces/IRegistry.sol";
+import "./interfaces/IPaymentProcessor.sol";
+import "./interfaces/ICraftCoin.sol";
 
 contract GigMarketplace {
     struct GigInfo {
@@ -17,8 +18,9 @@ contract GigMarketplace {
         bool isClosed;
     }
 
-    Registry public registry;
-    PaymentProcessor public paymentProcessor;
+    IRegistry public immutable registry;
+    IPaymentProcessor public immutable paymentProcessor;
+    ICraftCoin public immutable craftCoin;
     address public immutable relayer;
 
     mapping(uint256 => GigInfo) public gigs;
@@ -38,10 +40,11 @@ contract GigMarketplace {
         _;
     }
 
-    constructor(address _relayer, address _registry, address _paymentProcessor) {
+    constructor(address _relayer, address _registry, address _paymentProcessor, address _craftCoin) {
         relayer = _relayer;
-        registry = Registry(_registry);
-        paymentProcessor = PaymentProcessor(_paymentProcessor);
+        registry = IRegistry(_registry);
+        paymentProcessor = IPaymentProcessor(_paymentProcessor);
+        craftCoin = ICraftCoin(_craftCoin);
     }
 
     function createGig(bytes32 _rootHash, bytes32 _databaseId, uint256 _budget) external {
@@ -117,6 +120,9 @@ contract GigMarketplace {
         require(gig.hiredArtisan == address(0), "Artisan already hired");
         require(!_isApplicant(thisGigId, msg.sender), "Already applied");
 
+        uint256 requiredCFT = getRequiredCFT(_databaseId);
+        craftCoin.transferFrom(msg.sender, address(craftCoin), requiredCFT);
+
         gig.gigApplicants.push(msg.sender);
         emit GigApplicationSubmitted(thisGigId, msg.sender);
     }
@@ -130,6 +136,9 @@ contract GigMarketplace {
         require(!gig.isClosed, "Gig is closed");
         require(gig.hiredArtisan == address(0), "Artisan already hired");
         require(!_isApplicant(thisGigId, _artisan), "Already applied");
+
+        uint256 requiredCFT = getRequiredCFT(_databaseId);
+        craftCoin.transferFrom(_artisan, address(craftCoin), requiredCFT);
 
         gig.gigApplicants.push(_artisan);
         emit GigApplicationSubmitted(thisGigId, _artisan);
@@ -230,6 +239,14 @@ contract GigMarketplace {
         paymentProcessor.refundClientFunds(gig.paymentId);
 
         emit GigClosed(thisGigId);
+    }
+
+    function getRequiredCFT(bytes32 _databaseId) public view returns (uint256) {
+        uint256 gigId = indexes[_databaseId];
+        (,uint256 budget,,) = paymentProcessor.getPaymentDetails(gigs[gigId].paymentId);
+        if (budget < 100 * 10**6) return 2 * 10**18; // 2 CFT
+        else if (budget < 500 * 10**6) return 5 * 10**18; // 5 CFT
+        else return 10 * 10**18; // 10 CFT
     }
 
     function getGigInfo(bytes32 _databaseId)

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./Token.sol";
+import "./interfaces/IToken.sol";
 
 contract PaymentProcessor {
-    Token public token;
+    IToken public token;
     uint256 public platformFeePercentage;
     address public platformWallet; // deployer for now
 
@@ -33,7 +33,7 @@ contract PaymentProcessor {
 
     constructor(address _relayer, address _tokenAddress) {
         relayer = _relayer;
-        token = Token(_tokenAddress);
+        token = IToken(_tokenAddress);
         platformFeePercentage = 5; // 5%
         platformWallet = msg.sender;
     }
