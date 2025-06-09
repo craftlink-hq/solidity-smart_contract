@@ -29,6 +29,55 @@ contract CraftCoinTest is Test {
         assertEq(craftCoin.balanceOf(artisan), 50 * 10 ** 18);
     }
 
+    function testMintFor() public {
+        vm.prank(relayer);
+        craftCoin.mintFor(artisan);
+
+        assertEq(craftCoin.balanceOf(artisan), 50 * 10 ** 18);
+    }
+
+    function testBurn() public {
+        vm.prank(artisan);
+        craftCoin.mint();
+
+        uint256 initialBalance = craftCoin.balanceOf(artisan);
+        uint256 burnAmount = 20 * 10 ** 18;
+
+        vm.prank(artisan);
+        craftCoin.burn(burnAmount);
+
+        assertEq(craftCoin.balanceOf(artisan), initialBalance - burnAmount);
+    }
+
+    function testBurnFor() public {
+        vm.prank(artisan);
+        craftCoin.mint();
+
+        uint256 initialBalance = craftCoin.balanceOf(artisan);
+        uint256 burnAmount = 20 * 10 ** 18;
+
+        vm.prank(relayer);
+        craftCoin.burnFor(artisan, burnAmount);
+
+        assertEq(craftCoin.balanceOf(artisan), initialBalance - burnAmount);
+    }
+
+    function testCannotMintIfNotArtisan() public {
+        address nonArtisan = address(0x3);
+        vm.prank(nonArtisan);
+        vm.expectRevert("Not an artisan");
+
+        craftCoin.mint();
+    }
+
+    function testCannotMintForIfNotRelayer() public {
+        address nonRelayer = address(0x3);
+        vm.prank(nonRelayer);
+        vm.expectRevert("Caller is not the relayer");
+
+        craftCoin.mintFor(artisan);
+    }
+
     function testCannotMintBeforeInterval() public {
         vm.prank(artisan);
         craftCoin.mint();

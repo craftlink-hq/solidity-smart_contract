@@ -63,13 +63,13 @@ contract RegistryTest is Test {
         registry.registerAsArtisan("ipfsHash1");
         registry.registerAsClient("ipfsHash2");
         vm.stopPrank();
-        
+
         assertTrue(registry.isArtisan(user1));
         assertTrue(registry.isClient(user1));
-        
+
         (string memory artisanIpfsHash,,) = registry.getArtisanDetails(user1);
         (string memory clientIpfsHash,) = registry.getClientDetails(user1);
-        
+
         assertEq(artisanIpfsHash, "ipfsHash1");
         assertEq(clientIpfsHash, "ipfsHash2");
     }
@@ -79,13 +79,13 @@ contract RegistryTest is Test {
         registry.registerAsClient("ipfsHash1");
         registry.registerAsArtisan("ipfsHash2");
         vm.stopPrank();
-        
+
         assertTrue(registry.isArtisan(user1));
         assertTrue(registry.isClient(user1));
-        
+
         (string memory artisanIpfsHash,,) = registry.getArtisanDetails(user1);
         (string memory clientIpfsHash,) = registry.getClientDetails(user1);
-        
+
         assertEq(artisanIpfsHash, "ipfsHash2");
         assertEq(clientIpfsHash, "ipfsHash1");
     }
@@ -95,13 +95,13 @@ contract RegistryTest is Test {
         registry.registerAsArtisanFor(user1, "ipfsHash1");
         vm.prank(relayer);
         registry.registerAsClientFor(user1, "ipfsHash2");
-        
+
         assertTrue(registry.isArtisan(user1));
         assertTrue(registry.isClient(user1));
-        
+
         (string memory artisanIpfsHash,,) = registry.getArtisanDetails(user1);
         (string memory clientIpfsHash,) = registry.getClientDetails(user1);
-        
+
         assertEq(artisanIpfsHash, "ipfsHash1");
         assertEq(clientIpfsHash, "ipfsHash2");
     }
@@ -111,13 +111,13 @@ contract RegistryTest is Test {
         registry.registerAsClientFor(user1, "ipfsHash1");
         vm.prank(relayer);
         registry.registerAsArtisanFor(user1, "ipfsHash2");
-        
+
         assertTrue(registry.isArtisan(user1));
         assertTrue(registry.isClient(user1));
-        
+
         (string memory artisanIpfsHash,,) = registry.getArtisanDetails(user1);
         (string memory clientIpfsHash,) = registry.getClientDetails(user1);
-        
+
         assertEq(artisanIpfsHash, "ipfsHash2");
         assertEq(clientIpfsHash, "ipfsHash1");
     }
@@ -127,7 +127,7 @@ contract RegistryTest is Test {
         registry.registerAsArtisan("ipfsHash1");
         vm.prank(user2);
         registry.registerAsArtisan("ipfsHash2");
-        
+
         uint256 count = registry.getArtisanCount();
         assertEq(count, 2);
     }
@@ -137,7 +137,7 @@ contract RegistryTest is Test {
         registry.registerAsClient("ipfsHash1");
         vm.prank(user2);
         registry.registerAsClient("ipfsHash2");
-        
+
         uint256 count = registry.getClientCount();
         assertEq(count, 2);
     }
