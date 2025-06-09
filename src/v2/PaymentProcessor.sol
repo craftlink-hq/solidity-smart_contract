@@ -39,7 +39,7 @@ contract PaymentProcessor {
     }
 
     function createPayment(address _client, uint256 _amount) external {
-        require(_amount > 1000000, "Amount must be greater than 1 USDT");
+        require(_amount > 10000000, "Amount must be greater than 10 USDT");
         require(token.balanceOf(_client) >= _amount, "Insufficient token balance");
 
         uint256 platformFee = (_amount * platformFeePercentage) / 100;
