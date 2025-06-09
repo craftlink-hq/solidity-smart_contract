@@ -45,15 +45,11 @@ contract GigMarketplaceTest is Test {
         vm.startPrank(artisan);
         registry.registerAsArtisan("artisanIpfs");
         craftCoin.mint();
-        uint256 artisanBalance = craftCoin.balanceOf(artisan);
-        craftCoin.approve(address(gigMarketplace), artisanBalance);
         vm.stopPrank();
 
         vm.startPrank(artisan2);
         registry.registerAsArtisan("artisan2Ipfs");
         craftCoin.mint();
-        uint256 artisan2Balance = craftCoin.balanceOf(artisan2);
-        craftCoin.approve(address(gigMarketplace), artisan2Balance);
         vm.stopPrank();
     }
 
@@ -88,6 +84,7 @@ contract GigMarketplaceTest is Test {
         gigMarketplace.createGigFor(client, keccak256("rootHash1"), keccak256("databaseId1"), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client2, keccak256("rootHash2"), keccak256("databaseId2"), 200 * 10 ** 6);
         vm.stopPrank();
+        
         (address gigClient1,,,,,,) = gigMarketplace.getGigInfo(keccak256("databaseId1"));
         (address gigClient2,,,,,,) = gigMarketplace.getGigInfo(keccak256("databaseId2"));
         assertEq(gigClient1, client);
@@ -97,8 +94,13 @@ contract GigMarketplaceTest is Test {
     function testApplyForGig() public {
         vm.prank(client);
         gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
-        vm.prank(artisan);
+
+        vm.startPrank(artisan);
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approve(address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGig(databaseId);
+        vm.stopPrank();
+
         address[] memory applicants = gigMarketplace.getGigApplicants(databaseId);
         assertEq(applicants[0], artisan);
     }

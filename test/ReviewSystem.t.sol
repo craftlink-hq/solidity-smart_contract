@@ -41,8 +41,8 @@ contract ReviewSystemTest is Test {
         vm.startPrank(artisan);
         registry.registerAsArtisan("artisanIpfs");
         craftCoin.mint();
-        uint256 artisanBalance = craftCoin.balanceOf(artisan);
-        craftCoin.approve(address(gigMarketplace), artisanBalance);
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approve(address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGig(databaseId);
         vm.stopPrank();
         
