@@ -2,12 +2,6 @@
 pragma solidity ^0.8.20;
 
 contract Registry {
-    enum UserType {
-        None,
-        Artisan,
-        Client
-    }
-
     struct Artisan {
         string ipfsHash;
         bool isVerified;
@@ -21,7 +15,8 @@ contract Registry {
 
     mapping(address => Artisan) public artisans;
     mapping(address => Client) public clients;
-    mapping(address => UserType) public userTypes;
+    mapping(address => bool) public isRegisteredAsArtisan;
+    mapping(address => bool) public isRegisteredAsClient;
 
     address[] public artisanAddresses;
     address[] public clientAddresses;
@@ -41,31 +36,31 @@ contract Registry {
     }
 
     function registerAsArtisan(string memory _ipfsHash) external {
-        require(userTypes[msg.sender] != UserType.Artisan, "User already registered as an artisan");
+        require(!isRegisteredAsArtisan[msg.sender], "User already registered as an artisan");
 
         artisans[msg.sender] = Artisan({ipfsHash: _ipfsHash, isVerified: false, registrationDate: block.timestamp});
 
-        userTypes[msg.sender] = UserType.Artisan;
+        isRegisteredAsArtisan[msg.sender] = true;
         artisanAddresses.push(msg.sender);
         verifyArtisan(msg.sender); // Just for now to verify later
         emit ArtisanRegistered(msg.sender, _ipfsHash);
     }
 
     function registerAsClient(string memory _ipfsHash) external {
-        require(userTypes[msg.sender] != UserType.Client, "User already registered as a client");
+        require(!isRegisteredAsClient[msg.sender], "User already registered as a client");
 
         clients[msg.sender] = Client({ipfsHash: _ipfsHash, registrationDate: block.timestamp});
 
-        userTypes[msg.sender] = UserType.Client;
+        isRegisteredAsClient[msg.sender] = true;
         clientAddresses.push(msg.sender);
         emit ClientRegistered(msg.sender, _ipfsHash);
     }
 
     function registerAsArtisanFor(address _user, string memory _ipfsHash) external onlyRelayer {
-        require(userTypes[_user] != UserType.Artisan, "User already registered as an artisan");
+        require(!isRegisteredAsArtisan[_user], "User already registered as an artisan");
 
         artisans[_user] = Artisan({ipfsHash: _ipfsHash, isVerified: false, registrationDate: block.timestamp});
-        userTypes[_user] = UserType.Artisan;
+        isRegisteredAsArtisan[_user] = true;
 
         artisanAddresses.push(_user);
         verifyArtisan(_user);
@@ -74,10 +69,10 @@ contract Registry {
     }
 
     function registerAsClientFor(address _user, string memory _ipfsHash) external onlyRelayer {
-        require(userTypes[_user] != UserType.Client, "User already registered as a client");
+        require(!isRegisteredAsClient[_user], "User already registered as a client");
         clients[_user] = Client({ipfsHash: _ipfsHash, registrationDate: block.timestamp});
 
-        userTypes[_user] = UserType.Client;
+        isRegisteredAsClient[_user] = true;
         clientAddresses.push(_user);
 
         emit ClientRegistered(_user, _ipfsHash);
@@ -85,7 +80,7 @@ contract Registry {
 
     function verifyArtisan(address _artisanAddress) internal {
         // Only Owner or a DAO system will be set-up in future implemetations
-        require(userTypes[_artisanAddress] == UserType.Artisan, "Not registered as an artisan");
+        require(isRegisteredAsArtisan[_artisanAddress], "Not registered as an artisan");
         require(artisans[_artisanAddress].registrationDate != 0, "Artisan not registered");
         require(!artisans[_artisanAddress].isVerified, "Artisan already verified");
 
@@ -94,16 +89,16 @@ contract Registry {
     }
 
     function isArtisanVerified(address _artisanAddress) external view returns (bool) {
-        require(userTypes[_artisanAddress] == UserType.Artisan, "Not registered as an artisan");
+        require(isRegisteredAsArtisan[_artisanAddress], "Not registered as an artisan");
         return artisans[_artisanAddress].isVerified;
     }
 
     function isClient(address _clientAddress) external view returns (bool) {
-        return (userTypes[_clientAddress] == UserType.Client);
+        return isRegisteredAsClient[_clientAddress];
     }
 
     function isArtisan(address _artisanAddress) external view returns (bool) {
-        return (userTypes[_artisanAddress] == UserType.Artisan);
+        return isRegisteredAsArtisan[_artisanAddress];
     }
 
     function getArtisanDetails(address _artisanAddress)
@@ -111,7 +106,7 @@ contract Registry {
         view
         returns (string memory ipfsHash, bool isVerified, uint256 registrationDate)
     {
-        require(userTypes[_artisanAddress] == UserType.Artisan, "Not registered as an artisan");
+        require(isRegisteredAsArtisan[_artisanAddress], "Not registered as an artisan");
         Artisan storage artisan = artisans[_artisanAddress];
         return (artisan.ipfsHash, artisan.isVerified, artisan.registrationDate);
     }
@@ -121,7 +116,7 @@ contract Registry {
         view
         returns (string memory ipfsHash, uint256 registrationDate)
     {
-        require(userTypes[_clientAddress] == UserType.Client, "Not registered as a client");
+        require(isRegisteredAsClient[_clientAddress], "Not registered as a client");
         Client storage client = clients[_clientAddress];
         return (client.ipfsHash, client.registrationDate);
     }

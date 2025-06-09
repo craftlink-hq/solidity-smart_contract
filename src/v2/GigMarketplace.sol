@@ -45,7 +45,7 @@ contract GigMarketplace {
     }
 
     function createGig(bytes32 _rootHash, bytes32 _databaseId, uint256 _budget) external {
-        require(registry.userTypes(msg.sender) == Registry.UserType.Client, "Not a client");
+        require(registry.isClient(msg.sender), "Not a client");
 
         gigCounter++;
         paymentProcessor.createPayment(msg.sender, _budget);
@@ -71,7 +71,7 @@ contract GigMarketplace {
         external
         onlyRelayer
     {
-        require(registry.userTypes(_client) == Registry.UserType.Client, "Not a client");
+        require(registry.isClient(_client), "Not a client");
 
         gigCounter++;
         paymentProcessor.createPayment(_client, _budget);
