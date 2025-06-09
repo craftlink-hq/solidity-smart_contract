@@ -22,7 +22,7 @@ contract RegistryTest is Test {
         assertEq(ipfsHash, "ipfsHash1");
     }
 
-    function testCannotRegisterTwice() public {
+    function testCannotRegisterAsArtisanTwice() public {
         vm.startPrank(user1);
         registry.registerAsArtisan("ipfsHash1");
         vm.expectRevert("User already registered as an artisan");
@@ -30,10 +30,32 @@ contract RegistryTest is Test {
         vm.stopPrank();
     }
 
-    function testRelayerRegisterFor() public {
+    function testRegisterAsClient() public {
+        vm.prank(user1);
+        registry.registerAsClient("ipfsHash1");
+        assertEq(uint256(registry.userTypes(user1)), uint256(Registry.UserType.Client));
+        (string memory ipfsHash,) = registry.getClientDetails(user1);
+        assertEq(ipfsHash, "ipfsHash1");
+    }
+
+    function testCannotRegisterAsClientTwice() public {
+        vm.startPrank(user1);
+        registry.registerAsClient("ipfsHash1");
+        vm.expectRevert("User already registered as a client");
+        registry.registerAsClient("ipfsHash2");
+        vm.stopPrank();
+    }
+
+    function testRelayerRegisterForArtisan() public {
         vm.prank(relayer);
         registry.registerAsArtisanFor(user2, "ipfsHash2");
         assertEq(uint256(registry.userTypes(user2)), uint256(Registry.UserType.Artisan));
+    }
+
+    function testRelayerCannotRegisterForClient() public {
+        vm.prank(relayer);
+        registry.registerAsClientFor(user2, "ipfsHash2");
+        assertEq(uint256(registry.userTypes(user2)), uint256(Registry.UserType.Client));
     }
 
     function testNonRelayerCannotRegisterFor() public {
