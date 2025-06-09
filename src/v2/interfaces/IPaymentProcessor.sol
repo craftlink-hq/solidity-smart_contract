@@ -13,12 +13,10 @@ interface IPaymentProcessor {
     function releaseArtisanFundsFor(address artisan, uint256 _paymentId) external;
     function refundClientFunds(uint256 _paymentId) external;
     function updatePlatformFee(uint256 _newFeePercentage) external;
-    function getPaymentDetails(uint256 _paymentId) external view returns (
-        address client,
-        uint256 amount,
-        uint256 platformFee,
-        bool isReleased
-    );
+    function getPaymentDetails(uint256 _paymentId)
+        external
+        view
+        returns (address client, uint256 amount, uint256 platformFee, bool isReleased);
     function getClientAmountSpent(address _client) external view returns (uint256);
     function getArtisanAmountMade(address _artisan) external view returns (uint256);
 }

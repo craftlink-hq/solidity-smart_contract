@@ -13,15 +13,14 @@ interface IRegistry {
     function isArtisanVerified(address _artisanAddress) external view returns (bool);
     function isClient(address _clientAddress) external view returns (bool);
     function isArtisan(address _artisanAddress) external view returns (bool);
-    function getArtisanDetails(address _artisanAddress) external view returns (
-        string memory ipfsHash,
-        bool isVerified,
-        uint256 registrationDate
-    );
-    function getClientDetails(address _clientAddress) external view returns (
-        string memory ipfsHash,
-        uint256 registrationDate
-    );
+    function getArtisanDetails(address _artisanAddress)
+        external
+        view
+        returns (string memory ipfsHash, bool isVerified, uint256 registrationDate);
+    function getClientDetails(address _clientAddress)
+        external
+        view
+        returns (string memory ipfsHash, uint256 registrationDate);
     function getArtisanCount() external view returns (uint256);
     function getClientCount() external view returns (uint256);
 }

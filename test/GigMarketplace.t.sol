@@ -35,7 +35,7 @@ contract GigMarketplaceTest is Test {
         token.claim();
         token.approve(address(paymentProcessor), 1000 * 10 ** 6);
         vm.stopPrank();
-        
+
         vm.startPrank(client2);
         registry.registerAsClient("client2Ipfs");
         token.claim();
@@ -84,7 +84,7 @@ contract GigMarketplaceTest is Test {
         gigMarketplace.createGigFor(client, keccak256("rootHash1"), keccak256("databaseId1"), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client2, keccak256("rootHash2"), keccak256("databaseId2"), 200 * 10 ** 6);
         vm.stopPrank();
-        
+
         (address gigClient1,,,,,,) = gigMarketplace.getGigInfo(keccak256("databaseId1"));
         (address gigClient2,,,,,,) = gigMarketplace.getGigInfo(keccak256("databaseId2"));
         assertEq(gigClient1, client);

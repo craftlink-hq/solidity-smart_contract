@@ -243,10 +243,12 @@ contract GigMarketplace {
 
     function getRequiredCFT(bytes32 _databaseId) public view returns (uint256) {
         uint256 gigId = indexes[_databaseId];
-        (,uint256 budget,,) = paymentProcessor.getPaymentDetails(gigs[gigId].paymentId);
-        if (budget < 100 * 10**6) return 2 * 10**18; // 2 CFT
-        else if (budget < 500 * 10**6) return 5 * 10**18; // 5 CFT
-        else return 10 * 10**18; // 10 CFT
+        (, uint256 budget,,) = paymentProcessor.getPaymentDetails(gigs[gigId].paymentId);
+        if (budget < 100 * 10 ** 6) return 2 * 10 ** 18; // 2 CFT
+
+        else if (budget < 500 * 10 ** 6) return 5 * 10 ** 18; // 5 CFT
+
+        else return 10 * 10 ** 18; // 10 CFT
     }
 
     function getGigInfo(bytes32 _databaseId)

@@ -12,22 +12,18 @@ interface IReviewSystem {
     }
 
     event ReviewSubmittedByArtisan(
-        address indexed reviewer,
-        address indexed reviewee,
-        bytes32 indexed databaseId,
-        uint256 rating
+        address indexed reviewer, address indexed reviewee, bytes32 indexed databaseId, uint256 rating
     );
     event ReviewSubmittedByClient(
-        address indexed reviewer,
-        address indexed reviewee,
-        bytes32 indexed databaseId,
-        uint256 rating
+        address indexed reviewer, address indexed reviewee, bytes32 indexed databaseId, uint256 rating
     );
 
     function clientSubmitReview(bytes32 _databaseId, uint256 _rating, string memory _commentHash) external;
-    function clientSubmitReviewFor(address _reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash) external;
+    function clientSubmitReviewFor(address _reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash)
+        external;
     function artisanSubmitReview(bytes32 _databaseId, uint256 _rating, string memory _commentHash) external;
-    function artisanSubmitReviewFor(address reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash) external;
+    function artisanSubmitReviewFor(address reviewer, bytes32 _databaseId, uint256 _rating, string memory _commentHash)
+        external;
     function getArtisanReviewInfos(address _artisan) external view returns (ReviewInfo[] memory);
     function getClientReviewInfos(address _client) external view returns (ReviewInfo[] memory);
     function getArtisanReviews(address _artisan) external view returns (string[] memory);

@@ -24,14 +24,17 @@ interface IGigMarketplace {
     function confirmCompleteFor(address _client, bytes32 _databaseId) external;
     function closeGig(bytes32 _databaseId) external;
     function getRequiredCFT(bytes32 _databaseId) external view returns (uint256);
-    function getGigInfo(bytes32 _databaseId) external view returns (
-        address client,
-        address hiredArtisan,
-        uint256 paymentId,
-        bytes32 rootHash,
-        bool artisanComplete,
-        bool isCompleted,
-        bool isClosed
-    );
+    function getGigInfo(bytes32 _databaseId)
+        external
+        view
+        returns (
+            address client,
+            address hiredArtisan,
+            uint256 paymentId,
+            bytes32 rootHash,
+            bool artisanComplete,
+            bool isCompleted,
+            bool isClosed
+        );
     function getGigApplicants(bytes32 _databaseId) external view returns (address[] memory);
 }

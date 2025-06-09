@@ -45,7 +45,7 @@ contract ReviewSystemTest is Test {
         craftCoin.approve(address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGig(databaseId);
         vm.stopPrank();
-        
+
         vm.prank(client);
         gigMarketplace.hireArtisan(databaseId, artisan);
         vm.prank(artisan);
