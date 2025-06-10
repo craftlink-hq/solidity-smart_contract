@@ -114,7 +114,7 @@ contract GigMarketplace {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
-        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
         require(registry.isArtisanVerified(msg.sender), "Unverified artisan");
         require(!gig.isClosed, "Gig is closed");
         require(gig.hiredArtisan == address(0), "Artisan already hired");
@@ -127,7 +127,7 @@ contract GigMarketplace {
         emit GigApplicationSubmitted(thisGigId, msg.sender);
     }
 
-    function applyForGigFor(address _artisan, bytes32 _databaseId) external onlyRelayer {
+    function applyForGigFor(address _artisan, bytes32 _databaseId, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) external onlyRelayer {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
@@ -138,7 +138,8 @@ contract GigMarketplace {
         require(!_isApplicant(thisGigId, _artisan), "Already applied");
 
         uint256 requiredCFT = getRequiredCFT(_databaseId);
-        craftCoin.transferFrom(_artisan, address(craftCoin), requiredCFT);
+        craftCoin.permit(_artisan, address(this), requiredCFT, _deadline, _v, _r, _s);
+        craftCoin.burnFor(_artisan, requiredCFT);
 
         gig.gigApplicants.push(_artisan);
         emit GigApplicationSubmitted(thisGigId, _artisan);

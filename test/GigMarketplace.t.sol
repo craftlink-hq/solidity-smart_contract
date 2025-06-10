@@ -15,11 +15,11 @@ contract GigMarketplaceTest is Test {
     GigMarketplace gigMarketplace;
     CraftCoin craftCoin;
 
-    address relayer = address(0x1);
-    address client = address(0x2);
-    address client2 = address(0x3);
-    address artisan = address(0x4);
-    address artisan2 = address(0x5);
+    address relayer = vm.addr(1);
+    address client = vm.addr(2);
+    address client2 = vm.addr(3);
+    address artisan = vm.addr(4);
+    address artisan2 = vm.addr(5);
 
     bytes32 databaseId = keccak256("databaseId");
 
@@ -42,15 +42,42 @@ contract GigMarketplaceTest is Test {
         token.approve(address(paymentProcessor), 1000 * 10 ** 6);
         vm.stopPrank();
 
-        vm.startPrank(artisan);
-        registry.registerAsArtisan("artisanIpfs");
-        craftCoin.mint();
-        vm.stopPrank();
+        vm.startPrank(relayer);
+        registry.registerAsArtisanFor(artisan, "artisanIpfs");
+        craftCoin.mintFor(artisan);
 
-        vm.startPrank(artisan2);
-        registry.registerAsArtisan("artisan2Ipfs");
-        craftCoin.mint();
+        registry.registerAsArtisanFor(artisan2, "artisan2Ipfs");
+        craftCoin.mintFor(artisan2);
         vm.stopPrank();
+    }
+
+    function generatePermitSignature(
+        address _artisan,
+        address _spender,
+        uint256 _value,
+        uint256 _deadline
+    ) internal view returns (uint8 _v, bytes32 _r, bytes32 _s) {
+        uint256 nonce = craftCoin.nonces(artisan);
+        bytes32 structHash = keccak256(
+            abi.encode(
+                keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"),
+                _artisan,
+                _spender,
+                _value,
+                nonce,
+                _deadline
+            )
+        );
+        bytes32 domainSeparator = craftCoin.DOMAIN_SEPARATOR();
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                domainSeparator,
+                structHash
+            )
+        );
+
+        (_v, _r, _s) = vm.sign(4, digest);
     }
 
     function testCreateGig() public {
@@ -85,10 +112,85 @@ contract GigMarketplaceTest is Test {
         gigMarketplace.createGigFor(client2, keccak256("rootHash2"), keccak256("databaseId2"), 200 * 10 ** 6);
         vm.stopPrank();
 
-        (address gigClient1,,,,,,) = gigMarketplace.getGigInfo(keccak256("databaseId1"));
-        (address gigClient2,,,,,,) = gigMarketplace.getGigInfo(keccak256("databaseId2"));
+        (address gigClient1,, uint256 payment1Id,,,,) = gigMarketplace.getGigInfo(keccak256("databaseId1"));
+        (address gigClient2,, uint256 payment2Id,,,,) = gigMarketplace.getGigInfo(keccak256("databaseId2"));
         assertEq(gigClient1, client);
+        assertEq(payment1Id, 1);
         assertEq(gigClient2, client2);
+        assertEq(payment2Id, 2);
+    }
+
+    function testUpdateGigInfo() public {
+        vm.startPrank(client);
+        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
+        gigMarketplace.updateGigInfo(databaseId, keccak256("newRootHash"));
+        vm.stopPrank();
+
+        (,,, bytes32 rootHash,,,) = gigMarketplace.getGigInfo(databaseId);
+        assertEq(rootHash, keccak256("newRootHash"));
+    }
+
+    function testCannotUpdateGigInfoAsNotGigOwner() public {
+        vm.startPrank(artisan);
+        vm.expectRevert("Not gig owner");
+        gigMarketplace.updateGigInfo(databaseId, keccak256("newRootHash"));
+        vm.stopPrank();
+    }
+
+    // TODO: Client should not be able to update gig info (except for gig amount) after hiring an artisan
+    // This will likely be handled in the backend
+
+    function testCannotUpdateCompletedGig() public {
+        vm.prank(client);
+        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
+
+        vm.startPrank(relayer);
+        uint256 deadline = block.timestamp + 1 days;
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignature(artisan, address(gigMarketplace), requiredCFT, deadline);
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+        vm.stopPrank();
+
+        vm.prank(client);
+        gigMarketplace.hireArtisan(databaseId, artisan);
+
+        vm.prank(artisan);
+        gigMarketplace.markComplete(databaseId);
+
+        vm.startPrank(client);
+        gigMarketplace.confirmComplete(databaseId);
+        vm.expectRevert("Gig finished");
+        gigMarketplace.updateGigInfo(databaseId, keccak256("newRootHash"));
+        vm.stopPrank();
+    }
+
+    function testCannotUpdateClosedGig() public {
+        vm.prank(client);
+        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
+
+        vm.startPrank(artisan);
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approve(address(gigMarketplace), requiredCFT);
+        gigMarketplace.applyForGig(databaseId);
+        vm.stopPrank();
+
+        vm.startPrank(client);
+        gigMarketplace.closeGig(databaseId);
+        vm.expectRevert("Gig finished");
+        gigMarketplace.updateGigInfo(databaseId, keccak256("newRootHash"));
+        vm.stopPrank();
+    }
+
+    function testGetLatestRootHash() public {
+        vm.startPrank(relayer);
+        gigMarketplace.createGigFor(client, keccak256("rootHash1"), keccak256("databaseId1"), 100 * 10 ** 6);
+        gigMarketplace.createGigFor(client2, keccak256("rootHash2"), keccak256("databaseId2"), 200 * 10 ** 6);
+        gigMarketplace.createGigFor(client, keccak256("rootHash3"), keccak256("databaseId3"), 300 * 10 ** 6);
+        gigMarketplace.createGigFor(client2, keccak256("rootHash4"), keccak256("databaseId4"), 400 * 10 ** 6);
+        vm.stopPrank();
+
+        bytes32 latestRootHash = gigMarketplace.getLatestRootHash();
+        assertEq(latestRootHash, keccak256("rootHash4"));
     }
 
     function testApplyForGig() public {
@@ -104,4 +206,78 @@ contract GigMarketplaceTest is Test {
         address[] memory applicants = gigMarketplace.getGigApplicants(databaseId);
         assertEq(applicants[0], artisan);
     }
+
+    function testCannotApplyForInvalidGigId() public {
+        vm.startPrank(artisan);
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approve(address(gigMarketplace), requiredCFT);
+        vm.expectRevert("Invalid gig ID");
+        gigMarketplace.applyForGig(keccak256("invalidDatabaseId"));
+        vm.stopPrank();
+    }
+
+    // TODO: Ensure to test that an unverified artisan cannot apply for a gig
+
+    function testCannotApplyToClosedGig() public {
+        vm.startPrank(client);
+        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
+        gigMarketplace.closeGig(databaseId);
+        vm.stopPrank();
+
+        vm.startPrank(artisan);
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approve(address(gigMarketplace), requiredCFT);
+        vm.expectRevert("Gig is closed");
+        gigMarketplace.applyForGig(databaseId);
+        vm.stopPrank();
+    }
+
+    function testCannotAppliedToGigWithHiredArtisan() public {
+        vm.prank(client);
+        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
+
+        vm.startPrank(artisan);
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approve(address(gigMarketplace), requiredCFT);
+        gigMarketplace.applyForGig(databaseId);
+        vm.stopPrank();
+
+        vm.prank(client);
+        gigMarketplace.hireArtisan(databaseId, artisan);
+
+        vm.startPrank(artisan2);
+        uint256 requiredCFT2 = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approve(address(gigMarketplace), requiredCFT2);
+        vm.expectRevert("Artisan already hired");
+        gigMarketplace.applyForGig(databaseId);
+        vm.stopPrank();
+    }
+
+    function testCannotApplyForSameGigAgain() public {
+        vm.prank(client);
+        gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
+
+        vm.startPrank(artisan);
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approve(address(gigMarketplace), requiredCFT);
+        gigMarketplace.applyForGig(databaseId);
+
+        vm.expectRevert("Already applied");
+        gigMarketplace.applyForGig(databaseId);
+        vm.stopPrank();
+    }
+
+    // function testPaidApplyForGig() public {
+    //     vm.prank(relayer);
+    //     gigMarketplace.createGigFor(client, keccak256("rootHash"), databaseId, 100 * 10 ** 6);
+
+    //     vm.startPrank(artisan);
+    //     uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+    //     craftCoin.approve(address(gigMarketplace), requiredCFT);
+    //     gigMarketplace.applyForGig(databaseId);
+    //     vm.stopPrank();
+
+    //     address[] memory applicants = gigMarketplace.getGigApplicants(databaseId);
+    //     assertEq(applicants[0], artisan);
+    // }
 }

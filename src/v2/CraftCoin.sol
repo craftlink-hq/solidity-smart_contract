@@ -2,10 +2,11 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IRegistry.sol";
 
-contract CraftCoin is ERC20, Ownable {
+contract CraftCoin is ERC20, ERC20Permit, Ownable {
     IRegistry public immutable registry;
     uint256 public constant MINT_INTERVAL = 30 days;
     uint256 public constant TOKENS_PER_MINT = 50 * 10 ** 18;
@@ -20,7 +21,7 @@ contract CraftCoin is ERC20, Ownable {
         _;
     }
 
-    constructor(address _relayer, address _registry) ERC20("CraftCoin", "CFT") Ownable(msg.sender) {
+    constructor(address _relayer, address _registry) ERC20("CraftCoin", "CFT") ERC20Permit("CraftCoin") Ownable(msg.sender) {
         relayer = _relayer;
         registry = IRegistry(_registry);
     }
@@ -50,7 +51,7 @@ contract CraftCoin is ERC20, Ownable {
         emit Burned(msg.sender, amount);
     }
 
-    function burnFor(address _user, uint256 amount) external onlyRelayer {
+    function burnFor(address _user, uint256 amount) external { // OnlyRelayer was removed to allow users to permit others to burn for him
         _burn(_user, amount);
         emit Burned(_user, amount);
     }
