@@ -19,7 +19,9 @@ contract GigMarketplaceTest is Test {
     address client = vm.addr(2);
     address client2 = vm.addr(3);
     address artisan = vm.addr(4);
+    uint256 artisanPrivateKey = 4;
     address artisan2 = vm.addr(5);
+    uint256 artisan2PrivateKey = 5;
 
     bytes32 databaseId = keccak256("databaseId");
 
@@ -55,7 +57,8 @@ contract GigMarketplaceTest is Test {
         address _artisan,
         address _spender,
         uint256 _value,
-        uint256 _deadline
+        uint256 _deadline,
+        uint256 _artisanPrivateKey
     ) internal view returns (uint8 _v, bytes32 _r, bytes32 _s) {
         uint256 nonce = craftCoin.nonces(artisan);
         bytes32 structHash = keccak256(
@@ -77,7 +80,7 @@ contract GigMarketplaceTest is Test {
             )
         );
 
-        (_v, _r, _s) = vm.sign(4, digest);
+        (_v, _r, _s) = vm.sign(_artisanPrivateKey, digest);
     }
 
     function testCreateGig() public {
@@ -147,7 +150,7 @@ contract GigMarketplaceTest is Test {
         vm.startPrank(relayer);
         uint256 deadline = block.timestamp + 1 days;
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
-        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignature(artisan, address(gigMarketplace), requiredCFT, deadline);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignature(artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey);
         gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
         vm.stopPrank();
 
@@ -168,10 +171,11 @@ contract GigMarketplaceTest is Test {
         vm.prank(client);
         gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
 
-        vm.startPrank(artisan);
+        vm.startPrank(relayer);
+        uint256 deadline = block.timestamp + 1 days;
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
-        craftCoin.approve(address(gigMarketplace), requiredCFT);
-        gigMarketplace.applyForGig(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignature(artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey);
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
         vm.stopPrank();
 
         vm.startPrank(client);
@@ -197,10 +201,11 @@ contract GigMarketplaceTest is Test {
         vm.prank(client);
         gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
 
-        vm.startPrank(artisan);
+        vm.startPrank(relayer);
+        uint256 deadline = block.timestamp + 1 days;
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
-        craftCoin.approve(address(gigMarketplace), requiredCFT);
-        gigMarketplace.applyForGig(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignature(artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey);
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
         vm.stopPrank();
 
         address[] memory applicants = gigMarketplace.getGigApplicants(databaseId);
@@ -208,11 +213,12 @@ contract GigMarketplaceTest is Test {
     }
 
     function testCannotApplyForInvalidGigId() public {
-        vm.startPrank(artisan);
+        vm.startPrank(relayer);
+        uint256 deadline = block.timestamp + 1 days;
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
-        craftCoin.approve(address(gigMarketplace), requiredCFT);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignature(artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey);
         vm.expectRevert("Invalid gig ID");
-        gigMarketplace.applyForGig(keccak256("invalidDatabaseId"));
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
         vm.stopPrank();
     }
 
@@ -224,32 +230,35 @@ contract GigMarketplaceTest is Test {
         gigMarketplace.closeGig(databaseId);
         vm.stopPrank();
 
-        vm.startPrank(artisan);
+        vm.startPrank(relayer);
+        uint256 deadline = block.timestamp + 1 days;
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
-        craftCoin.approve(address(gigMarketplace), requiredCFT);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignature(artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey);
         vm.expectRevert("Gig is closed");
-        gigMarketplace.applyForGig(databaseId);
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
         vm.stopPrank();
     }
 
-    function testCannotAppliedToGigWithHiredArtisan() public {
+    function testCannotApplyToGigWithHiredArtisan() public {
         vm.prank(client);
         gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
 
-        vm.startPrank(artisan);
+        vm.startPrank(relayer);
+        uint256 deadline = block.timestamp + 1 days;
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
-        craftCoin.approve(address(gigMarketplace), requiredCFT);
-        gigMarketplace.applyForGig(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignature(artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey);
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
         vm.stopPrank();
 
         vm.prank(client);
         gigMarketplace.hireArtisan(databaseId, artisan);
 
-        vm.startPrank(artisan2);
+        vm.startPrank(relayer);
+        uint256 deadline2 = block.timestamp + 1 days;
         uint256 requiredCFT2 = gigMarketplace.getRequiredCFT(databaseId);
-        craftCoin.approve(address(gigMarketplace), requiredCFT2);
+        (uint8 v2, bytes32 r2, bytes32 s2) = generatePermitSignature(artisan2, address(gigMarketplace), requiredCFT2, deadline2, artisan2PrivateKey);
         vm.expectRevert("Artisan already hired");
-        gigMarketplace.applyForGig(databaseId);
+        gigMarketplace.applyForGigFor(artisan2, databaseId, deadline, v2, r2, s2);
         vm.stopPrank();
     }
 
@@ -257,13 +266,14 @@ contract GigMarketplaceTest is Test {
         vm.prank(client);
         gigMarketplace.createGig(keccak256("rootHash"), databaseId, 100 * 10 ** 6);
 
-        vm.startPrank(artisan);
+        vm.startPrank(relayer);
+        uint256 deadline = block.timestamp + 1 days;
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
-        craftCoin.approve(address(gigMarketplace), requiredCFT);
-        gigMarketplace.applyForGig(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignature(artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey);
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
 
         vm.expectRevert("Already applied");
-        gigMarketplace.applyForGig(databaseId);
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
         vm.stopPrank();
     }
 

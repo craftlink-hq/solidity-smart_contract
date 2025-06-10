@@ -131,7 +131,7 @@ contract GigMarketplace {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
-        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
         require(registry.isArtisanVerified(_artisan), "Unverified artisan");
         require(!gig.isClosed, "Gig is closed");
         require(gig.hiredArtisan == address(0), "Artisan already hired");
