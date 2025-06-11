@@ -30,6 +30,18 @@ contract PaymentProcessorTest is Test {
         assertEq(amount, 100 * 10 ** 6);
     }
 
+    function testCannotCreatePaymentWithLessThanMinimum() public {
+        vm.expectRevert("Amount must be greater than 10 USDT");
+        vm.prank(client);
+        paymentProcessor.createPayment(client, 9 * 10 ** 6);
+    }
+
+    function testCannotCreatePaymentWithInsufficientBalance() public {
+        vm.expectRevert("Insufficient token balance");
+        vm.prank(client);
+        paymentProcessor.createPayment(client, 2000 * 10 ** 6);
+    }
+
     function testReleaseArtisanFunds() public {
         vm.prank(client);
         paymentProcessor.createPayment(client, 100 * 10 ** 6);
@@ -37,6 +49,26 @@ contract PaymentProcessorTest is Test {
         paymentProcessor.releaseArtisanFunds(artisan, 1);
         assertEq(token.balanceOf(artisan), 95 * 10 ** 6); // 5% fee
     }
+
+    function testReleaseClientFunds() public {
+        vm.prank(client);
+        paymentProcessor.createPayment(client, 100 * 10 ** 6);
+        vm.prank(client);
+        paymentProcessor.refundClientFunds(1);
+        assertEq(token.balanceOf(client), 1000 * 10 ** 6);
+    }
+
+    function testCannotReleaseClientFundsMoreThanOnce() public {
+        vm.prank(client);
+        paymentProcessor.createPayment(client, 100 * 10 ** 6);
+        vm.prank(artisan);
+        paymentProcessor.releaseArtisanFunds(artisan, 1);
+        vm.expectRevert("Payment already released");
+        vm.prank(client);
+        paymentProcessor.refundClientFunds(1);
+    }
+
+    // TODO: Add test for updatePlatform Fee
 
     function testCurrentPaymentId() public {
         vm.prank(client);
