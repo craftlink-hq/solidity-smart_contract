@@ -52,6 +52,21 @@ contract PaymentProcessor {
         emit PaymentCreated(paymentId, _client, _amount);
     }
 
+    function createPaymentFor(address _client, uint256 _amount, uint256 _budget, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) external {
+        require(_amount > 10000000, "Amount must be greater than 10 USDT");
+        require(token.balanceOf(_client) >= _amount, "Insufficient token balance");
+
+        uint256 platformFee = (_amount * platformFeePercentage) / 100;
+
+        token.permit(_client, address(this), _budget, _deadline, _v, _r, _s);
+        token.transferFrom(_client, address(this), _amount);
+        paymentId++;
+
+        payments[paymentId] = Payment({client: _client, amount: _amount, platformFee: platformFee, isReleased: false});
+
+        emit PaymentCreated(paymentId, _client, _amount);
+    }
+
     function currentPaymentId() external view returns (uint256) {
         return paymentId;
     }

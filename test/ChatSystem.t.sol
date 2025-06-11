@@ -43,6 +43,7 @@ contract ChatSystemTest is Test {
         registry.registerAsArtisan("artisanIpfs");
         craftCoin.mint();
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        console.log("Required CFT:", requiredCFT);
         craftCoin.approve(address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGig(databaseId);
         vm.stopPrank();

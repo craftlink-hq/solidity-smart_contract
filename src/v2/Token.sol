@@ -2,9 +2,10 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Token is ERC20, Ownable {
+contract Token is ERC20, ERC20Permit, Ownable {
     address public immutable relayer;
     string _name = "USD Tethers";
     string _symbol = "USDT";
@@ -18,7 +19,7 @@ contract Token is ERC20, Ownable {
         _;
     }
 
-    constructor(address _relayer) ERC20(_name, _symbol) Ownable(msg.sender) {
+    constructor(address _relayer) ERC20(_name, _symbol) ERC20Permit("CraftCoin") Ownable(msg.sender) {
         relayer = _relayer;
         // _mint(msg.sender, initialSupply * 10**18);
     }

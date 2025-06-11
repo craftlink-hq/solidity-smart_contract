@@ -70,14 +70,14 @@ contract GigMarketplace {
         emit GigCreated(gigCounter, msg.sender, _rootHash);
     }
 
-    function createGigFor(address _client, bytes32 _rootHash, bytes32 _databaseId, uint256 _budget)
+    function createGigFor(address _client, bytes32 _rootHash, bytes32 _databaseId, uint256 _budget, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s)
         external
         onlyRelayer
     {
         require(registry.isClient(_client), "Not a client");
 
         gigCounter++;
-        paymentProcessor.createPayment(_client, _budget);
+        paymentProcessor.createPaymentFor(_client, _budget, _budget, _deadline, _v, _r, _s);
 
         gigs[gigCounter] = GigInfo({
             client: _client,
@@ -121,7 +121,7 @@ contract GigMarketplace {
         require(!_isApplicant(thisGigId, msg.sender), "Already applied");
 
         uint256 requiredCFT = getRequiredCFT(_databaseId);
-        craftCoin.transferFrom(msg.sender, address(craftCoin), requiredCFT);
+        craftCoin.burnFor(msg.sender, requiredCFT); // Since there is no restriction on who can burn, we allow the gigContract to burn CFT for the user
 
         gig.gigApplicants.push(msg.sender);
         emit GigApplicationSubmitted(thisGigId, msg.sender);
