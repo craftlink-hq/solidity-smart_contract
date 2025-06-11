@@ -9,13 +9,6 @@ interface ICraftCoin is IERC20 {
     function burn(uint256 amount) external;
     function burnFor(address _user, uint256 amount) external;
     function nextMintTime(address user) external view returns (uint256);
-    function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external;
+    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
+        external;
 }

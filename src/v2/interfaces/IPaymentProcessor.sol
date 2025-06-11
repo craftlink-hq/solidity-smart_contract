@@ -8,7 +8,15 @@ interface IPaymentProcessor {
     event PlatformFeeUpdated(uint256 newFeePercentage);
 
     function createPayment(address _client, uint256 _amount) external;
-     function createPaymentFor(address _client, uint256 _amount, uint256 _budget, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) external;
+    function createPaymentFor(
+        address _client,
+        uint256 _amount,
+        uint256 _budget,
+        uint256 _deadline,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) external;
     function currentPaymentId() external view returns (uint256);
     function releaseArtisanFunds(address _artisan, uint256 _paymentId) external;
     function releaseArtisanFundsFor(address artisan, uint256 _paymentId) external;

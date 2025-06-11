@@ -21,7 +21,11 @@ contract CraftCoin is ERC20, ERC20Permit, Ownable {
         _;
     }
 
-    constructor(address _relayer, address _registry) ERC20("CraftCoin", "CFT") ERC20Permit("CraftCoin") Ownable(msg.sender) {
+    constructor(address _relayer, address _registry)
+        ERC20("CraftCoin", "CFT")
+        ERC20Permit("CraftCoin")
+        Ownable(msg.sender)
+    {
         relayer = _relayer;
         registry = IRegistry(_registry);
     }
@@ -51,7 +55,8 @@ contract CraftCoin is ERC20, ERC20Permit, Ownable {
         emit Burned(msg.sender, amount);
     }
 
-    function burnFor(address _user, uint256 amount) external { // OnlyRelayer was removed to allow users to permit others to burn for him
+    function burnFor(address _user, uint256 amount) external {
+        // OnlyRelayer was removed to allow users to permit others to burn for him
         _burn(_user, amount);
         emit Burned(_user, amount);
     }

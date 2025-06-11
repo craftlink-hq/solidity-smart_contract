@@ -70,10 +70,16 @@ contract GigMarketplace {
         emit GigCreated(gigCounter, msg.sender, _rootHash);
     }
 
-    function createGigFor(address _client, bytes32 _rootHash, bytes32 _databaseId, uint256 _budget, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s)
-        external
-        onlyRelayer
-    {
+    function createGigFor(
+        address _client,
+        bytes32 _rootHash,
+        bytes32 _databaseId,
+        uint256 _budget,
+        uint256 _deadline,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) external onlyRelayer {
         require(registry.isClient(_client), "Not a client");
 
         gigCounter++;
@@ -127,7 +133,10 @@ contract GigMarketplace {
         emit GigApplicationSubmitted(thisGigId, msg.sender);
     }
 
-    function applyForGigFor(address _artisan, bytes32 _databaseId, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) external onlyRelayer {
+    function applyForGigFor(address _artisan, bytes32 _databaseId, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s)
+        external
+        onlyRelayer
+    {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 

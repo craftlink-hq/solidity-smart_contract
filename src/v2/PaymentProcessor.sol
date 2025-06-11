@@ -52,7 +52,15 @@ contract PaymentProcessor {
         emit PaymentCreated(paymentId, _client, _amount);
     }
 
-    function createPaymentFor(address _client, uint256 _amount, uint256 _budget, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s) external {
+    function createPaymentFor(
+        address _client,
+        uint256 _amount,
+        uint256 _budget,
+        uint256 _deadline,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) external {
         require(_amount > 10000000, "Amount must be greater than 10 USDT");
         require(token.balanceOf(_client) >= _amount, "Insufficient token balance");
 
