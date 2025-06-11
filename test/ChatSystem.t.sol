@@ -60,6 +60,28 @@ contract ChatSystemTest is Test {
         assertTrue(isActive);
     }
 
+    function testStartConversationAsArtisan() public {
+        vm.prank(artisan);
+        chatSystem.startConversation(conversationId, databaseId, keccak256("initialHash"));
+        (bytes32 rootHash, bool isActive) = chatSystem.getConversationDetails(conversationId);
+        assertEq(rootHash, keccak256("initialHash"));
+        assertTrue(isActive);
+    }
+
+    function testStartConversationUnauthorized() public {
+        vm.expectRevert("Not authorized");
+        chatSystem.startConversation(conversationId, databaseId, keccak256("initialHash"));
+    }
+
+    function testStartConversationAlreadyExists() public {
+        vm.prank(client);
+        chatSystem.startConversation(conversationId, databaseId, keccak256("initialHash"));
+
+        vm.expectRevert("Already exists");
+        vm.prank(client);
+        chatSystem.startConversation(conversationId, databaseId, keccak256("anotherHash"));
+    }
+
     function testUpdateConversation() public {
         vm.prank(client);
         chatSystem.startConversation(conversationId, databaseId, keccak256("initialHash"));
@@ -67,5 +89,37 @@ contract ChatSystemTest is Test {
         chatSystem.updateConversation(conversationId, databaseId, keccak256("newHash"));
         (bytes32 rootHash,) = chatSystem.getConversationDetails(conversationId);
         assertEq(rootHash, keccak256("newHash"));
+    }
+
+    function testUpdateConversationAsArtisan() public {
+        vm.prank(client);
+        chatSystem.startConversation(conversationId, databaseId, keccak256("initialHash"));
+        vm.prank(artisan);
+        chatSystem.updateConversation(conversationId, databaseId, keccak256("newHash"));
+        (bytes32 rootHash,) = chatSystem.getConversationDetails(conversationId);
+        assertEq(rootHash, keccak256("newHash"));
+    }
+
+    function testUpdateConversationUnauthorized() public {
+        vm.prank(client);
+        chatSystem.startConversation(conversationId, databaseId, keccak256("initialHash"));
+
+        vm.expectRevert("Not authorized");
+        vm.prank(address(0x4));
+        chatSystem.updateConversation(conversationId, databaseId, keccak256("newHash"));
+    }
+
+    function testUpdateConversationNotActive() public {
+        vm.expectRevert("Chat not active");
+        vm.prank(client);
+        chatSystem.updateConversation(conversationId, databaseId, keccak256("newHash"));
+    }
+
+    function testGetConversationDetails() public {
+        vm.prank(client);
+        chatSystem.startConversation(conversationId, databaseId, keccak256("initialHash"));
+        (bytes32 rootHash, bool isActive) = chatSystem.getConversationDetails(conversationId);
+        assertEq(rootHash, keccak256("initialHash"));
+        assertTrue(isActive);
     }
 }
