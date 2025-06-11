@@ -270,12 +270,11 @@ contract GigMarketplaceTest is Test {
     }
 
     function testApplyForGig() public {
-        vm.startPrank(client);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
-        gigMarketplace.createGig(rootHash, databaseId, 100 * 10 ** 6);
-        vm.stopPrank();
-
         vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
         (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
@@ -368,17 +367,389 @@ contract GigMarketplaceTest is Test {
         vm.stopPrank();
     }
 
-    // function testPaidApplyForGig() public {
-    //     vm.prank(relayer);
-    //     gigMarketplace.createGigFor(client, keccak256("rootHash"), databaseId, 100 * 10 ** 6);
+    function testClientCannotApplyToTheirOwnGig() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
 
-    //     vm.startPrank(artisan);
-    //     uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
-    //     craftCoin.approve(address(gigMarketplace), requiredCFT);
-    //     gigMarketplace.applyForGig(databaseId);
-    //     vm.stopPrank();
+        registry.registerAsArtisanFor(client, "clientArtisanIpfs");
+        craftCoin.mintFor(client);
 
-    //     address[] memory applicants = gigMarketplace.getGigApplicants(databaseId);
-    //     assertEq(applicants[0], artisan);
-    // }
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+
+        vm.expectRevert("Cannot apply to your own gig");
+        gigMarketplace.applyForGigFor(client, databaseId, deadline, v, r, s);
+        vm.stopPrank();
+    }
+
+    function testHireArtisan() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        vm.stopPrank();
+
+        (address gigClient, address hiredArtisan,,,,,) = gigMarketplace.getGigInfo(databaseId);
+        assertEq(gigClient, client);
+        assertEq(hiredArtisan, artisan);
+    }
+
+    function testCannotHireArtisanForInvalidGigId() public {
+        vm.startPrank(relayer);
+        vm.expectRevert("Invalid gig ID");
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        vm.stopPrank();
+    }
+
+    function testNotGigOwnerCannotHireArtisan() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        vm.expectRevert("Not gig owner");
+        gigMarketplace.hireArtisanFor(client2, databaseId, artisan);
+        vm.stopPrank();
+    }
+
+    function testCannotHireAnotherArtisanAfterArtisanHasBeenHired() public {
+        vm.startPrank(client);
+        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        gigMarketplace.createGig(rootHash, databaseId, 100 * 10 ** 6);
+        vm.stopPrank();
+
+        vm.startPrank(relayer);
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+        vm.stopPrank();
+
+        vm.prank(client);
+        gigMarketplace.hireArtisan(databaseId, artisan);
+        vm.startPrank(relayer);
+        uint256 deadline2 = block.timestamp + 1 days;
+        uint256 requiredCFT2 = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v2, bytes32 r2, bytes32 s2) = generatePermitSignatureForArtisan(
+            artisan2, address(gigMarketplace), requiredCFT2, deadline2, artisan2PrivateKey
+        );
+        vm.expectRevert("Artisan already hired");
+        gigMarketplace.applyForGigFor(artisan2, databaseId, deadline2, v2, r2, s2);
+        vm.stopPrank();
+    }
+
+    function testCannotHireArtisanForClosedGig() public {
+        vm.startPrank(client);
+        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        gigMarketplace.createGig(rootHash, databaseId, 100 * 10 ** 6);
+        vm.stopPrank();
+
+        vm.startPrank(relayer);
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+        vm.stopPrank();
+
+        vm.prank(client);
+        gigMarketplace.closeGig(databaseId);
+
+        vm.expectRevert("Gig is closed");
+        vm.prank(relayer);
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+    }
+
+    function testCannotHireArtisanThatDidNotApply() public {
+        vm.startPrank(client);
+        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        gigMarketplace.createGig(rootHash, databaseId, 100 * 10 ** 6);
+        vm.stopPrank();
+
+        vm.expectRevert("Not an applicant");
+        vm.prank(relayer);
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+    }
+
+    function testMarkComplete() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        gigMarketplace.markCompleteFor(artisan, databaseId);
+        vm.stopPrank();
+
+        (,,,, bool artisanComplete,,) = gigMarketplace.getGigInfo(databaseId);
+        assertTrue(artisanComplete);
+    }
+
+    function testCannotMarkCompleteForInvalidGigId() public {
+        vm.startPrank(relayer);
+        vm.expectRevert("Invalid gig ID");
+        gigMarketplace.markCompleteFor(artisan, databaseId);
+        vm.stopPrank();
+    }
+
+    function testCannotMarkCompleteAsNotHiredArtisan() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        vm.expectRevert("Not hired artisan");
+        gigMarketplace.markCompleteFor(artisan, databaseId);
+        vm.stopPrank();
+    }
+
+    function testCannotMarkCompletedGigAsComplete() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        gigMarketplace.markCompleteFor(artisan, databaseId);
+
+        vm.expectRevert("Already marked");
+        gigMarketplace.markCompleteFor(artisan, databaseId);
+        vm.stopPrank();
+    }
+
+    function testConfirmComplete() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        gigMarketplace.markCompleteFor(artisan, databaseId);
+        gigMarketplace.confirmCompleteFor(client, databaseId);
+        vm.stopPrank();
+
+        (,,,,, bool isComplete,) = gigMarketplace.getGigInfo(databaseId);
+        assertTrue(isComplete);
+    }
+
+    function testCannotConfirmCompleteForInvalidGigId() public {
+        vm.startPrank(relayer);
+        vm.expectRevert("Invalid gig ID");
+        gigMarketplace.confirmCompleteFor(client, databaseId);
+        vm.stopPrank();
+    }
+
+    function testNotGigOwnerCannotConfirmComplete() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        gigMarketplace.markCompleteFor(artisan, databaseId);
+
+        vm.expectRevert("Not gig owner");
+        gigMarketplace.confirmCompleteFor(client2, databaseId);
+        vm.stopPrank();
+    }
+
+    function testCannotConfirmCompleteWhenNotMarkedComplete() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        vm.expectRevert("Gig not completed || Closed");
+        gigMarketplace.confirmCompleteFor(client, databaseId);
+        vm.stopPrank();
+    }
+
+    function testCannotConfirmCompleteForAlreadyCompletedGig() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        gigMarketplace.markCompleteFor(artisan, databaseId);
+        gigMarketplace.confirmCompleteFor(client, databaseId);
+
+        vm.expectRevert("Gig not completed || Closed");
+        gigMarketplace.confirmCompleteFor(client, databaseId);
+        vm.stopPrank();
+    }
+
+    function testCannotConfirmClosedGigAsComplete() public {
+        vm.startPrank(client);
+        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        gigMarketplace.createGig(rootHash, databaseId, 100 * 10 ** 6);
+        vm.stopPrank();
+
+        vm.startPrank(relayer);
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+        vm.stopPrank();
+
+        vm.prank(client);
+        gigMarketplace.closeGig(databaseId);
+
+        vm.expectRevert("Gig not completed || Closed");
+        vm.prank(relayer);
+        gigMarketplace.confirmCompleteFor(client, databaseId);
+    }
+
+    function testCloseGig() public {
+        vm.startPrank(client);
+        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        gigMarketplace.createGig(rootHash, databaseId, 100 * 10 ** 6);
+        gigMarketplace.closeGig(databaseId);
+        vm.stopPrank();
+
+        (,,,,,, bool isClosed) = gigMarketplace.getGigInfo(databaseId);
+        assertTrue(isClosed);
+
+        uint256 clientBalance = token.balanceOf(client);
+        assertEq(clientBalance, 100 * 10 ** 6 + 900 * 10 ** 6);
+    }
+
+    function testCannotCloseInvalidGigId() public {
+        vm.startPrank(relayer);
+        vm.expectRevert("Invalid gig ID");
+        gigMarketplace.closeGig(databaseId);
+        vm.stopPrank();
+    }
+
+    function testNotGigOwnerCannotCloseGig() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        vm.expectRevert("Not gig owner");
+        gigMarketplace.closeGig(databaseId);
+        vm.stopPrank();
+    }
+
+    function testCannotCloseActiveGig() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        vm.stopPrank();
+
+        vm.prank(client);
+        vm.expectRevert("Cannot close active gig");
+        gigMarketplace.closeGig(databaseId);
+    }
+
+    function testCannotCloseCompletedGig() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        gigMarketplace.markCompleteFor(artisan, databaseId);
+        vm.stopPrank();
+
+        vm.expectRevert("Cannot close active gig");
+        vm.prank(client);
+        gigMarketplace.closeGig(databaseId);
+    }
+
+    function testCannotCloseGigThatIsAlreadyClosed() public {
+        vm.startPrank(client);
+        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        gigMarketplace.createGig(rootHash, databaseId, 100 * 10 ** 6);
+        gigMarketplace.closeGig(databaseId);
+
+        vm.expectRevert("Gig already Completed || Closed");
+        gigMarketplace.closeGig(databaseId);
+        vm.stopPrank();
+    }
 }

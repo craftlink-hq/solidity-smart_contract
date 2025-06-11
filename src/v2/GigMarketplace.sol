@@ -125,6 +125,7 @@ contract GigMarketplace {
         require(!gig.isClosed, "Gig is closed");
         require(gig.hiredArtisan == address(0), "Artisan already hired");
         require(!_isApplicant(thisGigId, msg.sender), "Already applied");
+        require(gig.client != msg.sender, "Cannot apply to your own gig");
 
         uint256 requiredCFT = getRequiredCFT(_databaseId);
         craftCoin.burnFor(msg.sender, requiredCFT); // Since there is no restriction on who can burn, we allow the gigContract to burn CFT for the user
@@ -145,6 +146,7 @@ contract GigMarketplace {
         require(!gig.isClosed, "Gig is closed");
         require(gig.hiredArtisan == address(0), "Artisan already hired");
         require(!_isApplicant(thisGigId, _artisan), "Already applied");
+        require(gig.client != _artisan, "Cannot apply to your own gig");
 
         uint256 requiredCFT = getRequiredCFT(_databaseId);
         craftCoin.permit(_artisan, address(this), requiredCFT, _deadline, _v, _r, _s);
@@ -158,7 +160,7 @@ contract GigMarketplace {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
-        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
         require(msg.sender == gig.client, "Not gig owner");
         require(gig.hiredArtisan == address(0), "Artisan already hired");
         require(!gig.isClosed, "Gig is closed");
@@ -173,7 +175,7 @@ contract GigMarketplace {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
-        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
         require(_client == gig.client, "Not gig owner");
         require(gig.hiredArtisan == address(0), "Artisan already hired");
         require(!gig.isClosed, "Gig is closed");
@@ -188,7 +190,7 @@ contract GigMarketplace {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
-        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
         require(msg.sender == gig.hiredArtisan, "Not hired artisan");
         require(!gig.isCompleted && !gig.isClosed, "Gig finished");
         require(!gig.artisanComplete, "Already marked");
@@ -202,7 +204,7 @@ contract GigMarketplace {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
-        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
         require(_artisan == gig.hiredArtisan, "Not hired artisan");
         require(!gig.isCompleted && !gig.isClosed, "Gig finished");
         require(!gig.artisanComplete, "Already marked");
@@ -215,7 +217,7 @@ contract GigMarketplace {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
-        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
         require(msg.sender == gig.client, "Not gig owner");
         require(gig.artisanComplete && !gig.isCompleted && !gig.isClosed, "Gig not completed || Closed");
 
@@ -228,7 +230,7 @@ contract GigMarketplace {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
-        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
         require(_client == gig.client, "Not gig owner");
         require(gig.artisanComplete && !gig.isCompleted && !gig.isClosed, "Gig not completed || Closed");
 
@@ -240,7 +242,7 @@ contract GigMarketplace {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
-        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
         require(msg.sender == gig.client, "Not gig owner");
         require(gig.hiredArtisan == address(0), "Cannot close active gig");
         require(!gig.isCompleted && !gig.isClosed, "Gig already Completed || Closed");
@@ -277,7 +279,7 @@ contract GigMarketplace {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
-        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
 
         return (
             gig.client,
@@ -294,7 +296,7 @@ contract GigMarketplace {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 
-        require(thisGigId <= gigCounter, "Invalid gig ID");
+        require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
 
         return gig.gigApplicants;
     }
