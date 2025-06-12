@@ -72,7 +72,7 @@ contract ReviewSystem {
         (address client, address hiredArtisan,,,, bool isCompleted, bool isClosed) =
             gigMarketplace.getGigInfo(_databaseId);
 
-        require(_reviewer == client, "Only the client can submit a review");
+        require(_reviewer == client, "Only the gig client can submit a review");
         require(isCompleted, "Gig must be completed before submitting a review");
         require(!isClosed, "Cannot review a closed gig");
 
@@ -121,7 +121,7 @@ contract ReviewSystem {
         (address client, address hiredArtisan,,,, bool isCompleted, bool isClosed) =
             gigMarketplace.getGigInfo(_databaseId);
 
-        require(reviewer == hiredArtisan, "Only the artisan can submit a client review");
+        require(reviewer == hiredArtisan, "Only the hired artisan can submit a client review");
         require(isCompleted, "Gig must be completed before submitting a review");
         require(!isClosed, "Cannot review a closed gig");
 
