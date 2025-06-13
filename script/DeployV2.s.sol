@@ -17,8 +17,9 @@ contract DeployV2Script is Script {
         require(deployerPrivateKey != 0, "Deployer private key is not set");
 
         address relayer = vm.addr(deployerPrivateKey);
-        vm.startBroadcast(deployerPrivateKey);
+        // address relayer = vm.envAddress("RELAYER");
 
+        vm.startBroadcast(deployerPrivateKey);
         Registry registry = new Registry(relayer);
         Token token = new Token(relayer);
         CraftCoin craftCoin = new CraftCoin(relayer, address(registry));
@@ -28,14 +29,28 @@ contract DeployV2Script is Script {
         ReviewSystem reviewSystem = new ReviewSystem(relayer, address(registry), address(gigMarketplace));
         ChatSystem chatSystem = new ChatSystem(address(gigMarketplace));
 
-        console.log("Registry deployed at:", address(registry));
-        console.log("CraftLinkToken deployed at:", address(token));
-        console.log("CraftCoinToken deployed at:", address(craftCoin));
-        console.log("PaymentProcessor deployed at:", address(paymentProcessor));
-        console.log("GigMarketplace deployed at:", address(gigMarketplace));
-        console.log("ReviewSystem deployed at:", address(reviewSystem));
-        console.log("ChatSystem deployed at:", address(chatSystem));
-
+        writeAddressesToFile(address(registry), "Registry");
+        writeAddressesToFile(address(token), "CraftLinkToken");
+        writeAddressesToFile(address(craftCoin), "CraftCoinToken");
+        writeAddressesToFile(address(paymentProcessor), "PaymentProcessor");
+        writeAddressesToFile(address(gigMarketplace), "GigMarketplace");
+        writeAddressesToFile(address(reviewSystem), "ReviewSystem");
+        writeAddressesToFile(address(chatSystem), "ChatSystem");
         vm.stopBroadcast();
+    }
+
+    function writeAddressesToFile(address addr, string memory text) public {
+        string memory filename = "./deployed_contracts.txt";
+
+        vm.writeLine(
+            filename,
+            "---------------------------------------------------------------------------------------------------------------------------"
+        );
+        vm.writeLine(filename, text);
+        vm.writeLine(filename, vm.toString(addr));
+        vm.writeLine(
+            filename,
+            "---------------------------------------------------------------------------------------------------------------------------"
+        );
     }
 }
