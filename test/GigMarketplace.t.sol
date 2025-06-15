@@ -27,9 +27,11 @@ contract GigMarketplaceTest is Test {
 
     bytes32 databaseId = keccak256("databaseId");
     bytes32 databaseId2 = keccak256("databaseId2");
+    bytes32 databaseId3 = keccak256("databaseId3");
 
     bytes32 rootHash = keccak256("rootHash");
     bytes32 rootHash2 = keccak256("rootHash2");
+    bytes32 rootHash3 = keccak256("rootHash3");
 
     uint256 deadline = block.timestamp + 1 days;
 
@@ -751,5 +753,106 @@ contract GigMarketplaceTest is Test {
         vm.expectRevert("Gig already Completed || Closed");
         gigMarketplace.closeGig(databaseId);
         vm.stopPrank();
+    }
+
+    function testGetClientGigReturnsCountZeroIfArtisanNotHired() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        (uint8 v2, bytes32 r2, bytes32 s2) = generatePermitSignatureForClient(
+            client2, address(paymentProcessor), 200 * 10 ** 6, deadline, client2PrivateKey
+        );
+        gigMarketplace.createGigFor(client2, rootHash2, databaseId2, 200 * 10 ** 6, deadline, v2, r2, s2);
+        vm.stopPrank();
+
+        uint256 clientGigCount = gigMarketplace.getClientGigCount(client);
+        uint256 client2GigCount = gigMarketplace.getClientGigCount(client2);
+
+        assertEq(clientGigCount, 0);
+        assertEq(client2GigCount, 0);
+    }
+
+    function testGetClientGigReturnsCountOneIfArtisanHired() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        vm.stopPrank();
+
+        uint256 clientGigCount = gigMarketplace.getClientGigCount(client);
+        assertEq(clientGigCount, 1);
+    }
+
+    function testGetClientGigReturnsCountZeroIfGigClosed() public {
+        vm.startPrank(client);
+        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        gigMarketplace.createGig(rootHash, databaseId, 100 * 10 ** 6);
+        gigMarketplace.closeGig(databaseId);
+        vm.stopPrank();
+
+        uint256 clientGigCount = gigMarketplace.getClientGigCount(client);
+        assertEq(clientGigCount, 0);
+    }
+
+    function testGetClientAndArtisanCount() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        (uint8 v2, bytes32 r2, bytes32 s2) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 200 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash2, databaseId2, 200 * 10 ** 6, deadline, v2, r2, s2);
+
+        (uint8 v3, bytes32 r3, bytes32 s3) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 300 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash3, databaseId3, 300 * 10 ** 6, deadline, v3, r3, s3);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 vi, bytes32 ri, bytes32 si) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, vi, ri, si);
+
+        uint256 requiredCFT2 = gigMarketplace.getRequiredCFT(databaseId2);
+        (uint8 vii, bytes32 rii, bytes32 sii) = generatePermitSignatureForArtisan(
+            artisan2, address(gigMarketplace), requiredCFT2, deadline, artisan2PrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan2, databaseId2, deadline, vii, rii, sii);
+
+        uint256 requiredCFT3 = gigMarketplace.getRequiredCFT(databaseId3);
+        (uint8 viii, bytes32 riii, bytes32 siii) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT3, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId3, deadline, viii, riii, siii);
+
+        gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        gigMarketplace.hireArtisanFor(client, databaseId2, artisan2);
+        gigMarketplace.hireArtisanFor(client, databaseId3, artisan);
+        vm.stopPrank();
+
+        uint256 clientCount = gigMarketplace.getClientGigCount(client);
+        assertEq(clientCount, 3);
+
+        uint256 artisanCount = gigMarketplace.getArtisanHiredCount(artisan);
+        uint256 artisan2Count = gigMarketplace.getArtisanHiredCount(artisan2);
+
+        assertEq(artisanCount, 2);
+        assertEq(artisan2Count, 1);
     }
 }

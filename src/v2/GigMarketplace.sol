@@ -27,6 +27,9 @@ contract GigMarketplace {
     mapping(bytes32 => uint256) public indexes; // Inverse mapping of gig indexes by databaseId for quick reference
     uint256 public gigCounter;
 
+    mapping(address => uint256) public clientGigCount;
+    mapping(address => uint256) public artisanHiredCount;
+
     event GigCreated(uint256 indexed gigId, address indexed client, bytes32 rootHash);
     event GigApplicationSubmitted(uint256 indexed gigId, address indexed artisan);
     event ArtisanHired(uint256 indexed gigId, address indexed artisan);
@@ -167,6 +170,8 @@ contract GigMarketplace {
         require(_isApplicant(thisGigId, _artisan), "Not an applicant");
 
         gig.hiredArtisan = _artisan;
+        clientGigCount[gig.client] += 1;
+        artisanHiredCount[_artisan] += 1;
 
         emit ArtisanHired(thisGigId, _artisan);
     }
@@ -182,6 +187,8 @@ contract GigMarketplace {
         require(_isApplicant(thisGigId, _artisan), "Not an applicant");
 
         gig.hiredArtisan = _artisan;
+        clientGigCount[gig.client] += 1;
+        artisanHiredCount[_artisan] += 1;
 
         emit ArtisanHired(thisGigId, _artisan);
     }
@@ -299,6 +306,14 @@ contract GigMarketplace {
         require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");
 
         return gig.gigApplicants;
+    }
+
+    function getClientGigCount(address _client) external view returns (uint256) {
+        return clientGigCount[_client];
+    }
+
+    function getArtisanHiredCount(address _artisan) external view returns (uint256) {
+        return artisanHiredCount[_artisan];
     }
 
     function _isApplicant(uint256 _gigId, address _artisan) internal view returns (bool) {
