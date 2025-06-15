@@ -54,3 +54,6 @@ contract DeployV2Script is Script {
         );
     }
 }
+
+// DEPLOY COMMAND
+// forge script script/DeployV2.s.sol:DeployV2Script --rpc-url $LISK_SEPOLIA_RPC_URL --broadcast --verify -vvvv
