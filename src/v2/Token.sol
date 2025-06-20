@@ -19,7 +19,7 @@ contract Token is ERC20, ERC20Permit, Ownable {
         _;
     }
 
-    constructor(address _relayer) ERC20(_name, _symbol) ERC20Permit("CraftCoin") Ownable(msg.sender) {
+    constructor(address _relayer) ERC20(_name, _symbol) ERC20Permit("USD Tethers") Ownable(msg.sender) {
         relayer = _relayer;
         // _mint(msg.sender, initialSupply * 10**18);
     }

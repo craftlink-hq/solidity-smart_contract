@@ -29,6 +29,8 @@ contract GigMarketplace {
 
     mapping(address => uint256) public clientGigCount;
     mapping(address => uint256) public artisanHiredCount;
+    mapping(address => bytes32[]) public artisanAppliedGigs;
+    mapping(address => bytes32[]) public clientCreatedGigs;
 
     event GigCreated(uint256 indexed gigId, address indexed client, bytes32 rootHash);
     event GigApplicationSubmitted(uint256 indexed gigId, address indexed artisan);
@@ -69,6 +71,7 @@ contract GigMarketplace {
         });
 
         indexes[_databaseId] = gigCounter;
+        clientCreatedGigs[msg.sender].push(_databaseId);
 
         emit GigCreated(gigCounter, msg.sender, _rootHash);
     }
@@ -101,6 +104,8 @@ contract GigMarketplace {
         });
 
         indexes[_databaseId] = gigCounter;
+        clientCreatedGigs[_client].push(_databaseId);
+
         emit GigCreated(gigCounter, _client, _rootHash);
     }
 
@@ -134,6 +139,8 @@ contract GigMarketplace {
         craftCoin.burnFor(msg.sender, requiredCFT); // Since there is no restriction on who can burn, we allow the gigContract to burn CFT for the user
 
         gig.gigApplicants.push(msg.sender);
+        artisanAppliedGigs[msg.sender].push(_databaseId);
+
         emit GigApplicationSubmitted(thisGigId, msg.sender);
     }
 
@@ -156,6 +163,8 @@ contract GigMarketplace {
         craftCoin.burnFor(_artisan, requiredCFT);
 
         gig.gigApplicants.push(_artisan);
+        artisanAppliedGigs[_artisan].push(_databaseId);
+
         emit GigApplicationSubmitted(thisGigId, _artisan);
     }
 
@@ -314,6 +323,14 @@ contract GigMarketplace {
 
     function getArtisanHiredCount(address _artisan) external view returns (uint256) {
         return artisanHiredCount[_artisan];
+    }
+
+    function getArtisanAppliedGigs(address _artisan) external view returns (bytes32[] memory) {
+        return artisanAppliedGigs[_artisan];
+    }
+
+    function getClientCreatedGigs(address _client) external view returns (bytes32[] memory) {
+        return clientCreatedGigs[_client];
     }
 
     function _isApplicant(uint256 _gigId, address _artisan) internal view returns (bool) {

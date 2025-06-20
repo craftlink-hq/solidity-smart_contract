@@ -855,4 +855,110 @@ contract GigMarketplaceTest is Test {
         assertEq(artisanCount, 2);
         assertEq(artisan2Count, 1);
     }
+
+    function testGetArtisanAppliedGig() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+        vm.stopPrank();
+
+        bytes32[] memory artisanAppliedGigs = gigMarketplace.getArtisanAppliedGigs(artisan);
+        assertEq(artisanAppliedGigs.length, 1);
+        assertEq(artisanAppliedGigs[0], databaseId);
+    }
+
+    function testGetArtisanAppliedMultipleGigs() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        (uint8 v2, bytes32 r2, bytes32 s2) = generatePermitSignatureForClient(
+            client2, address(paymentProcessor), 200 * 10 ** 6, deadline, client2PrivateKey
+        );
+        gigMarketplace.createGigFor(client2, rootHash2, databaseId2, 200 * 10 ** 6, deadline, v2, r2, s2);
+
+        uint256 requiredCFT2 = gigMarketplace.getRequiredCFT(databaseId2);
+        (uint8 v3, bytes32 r3, bytes32 s3) = generatePermitSignatureForArtisan(
+            artisan2, address(gigMarketplace), requiredCFT2, deadline, artisan2PrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan2, databaseId2, deadline, v3, r3, s3);
+        vm.stopPrank();
+
+        bytes32[] memory artisanAppliedGigs = gigMarketplace.getArtisanAppliedGigs(artisan);
+        assertEq(artisanAppliedGigs.length, 1);
+        assertEq(artisanAppliedGigs[0], databaseId);
+
+        bytes32[] memory artisan2AppliedGigs = gigMarketplace.getArtisanAppliedGigs(artisan2);
+        assertEq(artisan2AppliedGigs.length, 1);
+        assertEq(artisan2AppliedGigs[0], databaseId2);
+    }
+
+    function testGetAllGigsAppliedByOneArtisan() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        (uint8 v, bytes32 r, bytes32 s) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId, deadline, v, r, s);
+
+        (uint8 v2, bytes32 r2, bytes32 s2) = generatePermitSignatureForClient(
+            client2, address(paymentProcessor), 200 * 10 ** 6, deadline, client2PrivateKey
+        );
+        gigMarketplace.createGigFor(client2, rootHash2, databaseId2, 200 * 10 ** 6, deadline, v2, r2, s2);
+
+        uint256 requiredCFT2 = gigMarketplace.getRequiredCFT(databaseId2);
+        (uint8 v3, bytes32 r3, bytes32 s3) = generatePermitSignatureForArtisan(
+            artisan, address(gigMarketplace), requiredCFT2, deadline, artisanPrivateKey
+        );
+        gigMarketplace.applyForGigFor(artisan, databaseId2, deadline, v3, r3, s3);
+
+        vm.stopPrank();
+        bytes32[] memory artisanAppliedGigs = gigMarketplace.getArtisanAppliedGigs(artisan);
+        assertEq(artisanAppliedGigs.length, 2);
+        assertEq(artisanAppliedGigs[0], databaseId);
+        assertEq(artisanAppliedGigs[1], databaseId2);
+    }
+
+    function testGetClientCreatedGigs() public {
+        vm.startPrank(relayer);
+        (uint8 v_, bytes32 r_, bytes32 s_) = generatePermitSignatureForClient(
+            client, address(paymentProcessor), 100 * 10 ** 6, deadline, clientPrivateKey
+        );
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6, deadline, v_, r_, s_);
+
+        (uint8 v2, bytes32 r2, bytes32 s2) = generatePermitSignatureForClient(
+            client2, address(paymentProcessor), 200 * 10 ** 6, deadline, client2PrivateKey
+        );
+        gigMarketplace.createGigFor(client2, rootHash2, databaseId2, 200 * 10 ** 6, deadline, v2, r2, s2);
+        vm.stopPrank();
+
+        bytes32[] memory clientGigs = gigMarketplace.getClientCreatedGigs(client);
+        assertEq(clientGigs.length, 1);
+        assertEq(clientGigs[0], databaseId);
+
+        bytes32[] memory client2Gigs = gigMarketplace.getClientCreatedGigs(client2);
+        assertEq(client2Gigs.length, 1);
+        assertEq(client2Gigs[0], databaseId2);
+    }
 }
