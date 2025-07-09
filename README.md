@@ -71,20 +71,20 @@ Transactions saved to: /craftlink-hq/solidity-smart_contract/broadcast/DeployV2.
 Registry deployed at: 0x4BEB47A1489648b297e3e7Af6F12B14721135765  
 https://sepolia-blockscout.lisk.com/address/0x4BEB47A1489648b297e3e7Af6F12B14721135765
 
-Token deployed at: 0x3BE4f07114C2c879ddC56969ec87EC4036f5510c
+Token deployed at: 0x3BE4f07114C2c879ddC56969ec87EC4036f5510c   
 https://sepolia-blockscout.lisk.com/address/0x3BE4f07114C2c879ddC56969ec87EC4036f5510c
 
-CraftCoin deployed at: 0x1BDf32e62d0ac79bb87Dd70205C94CC26A824101  
+CraftCoin deployed at: 0x1BDf32e62d0ac79bb87Dd70205C94CC26A824101   
 https://sepolia-blockscout.lisk.com/address/0x1BDf32e62d0ac79bb87Dd70205C94CC26A824101
 
-PaymentProcessor deployed at: 0x63fCF94801b3b54350dA98DdbEEFd5423951B9D1
+PaymentProcessor deployed at: 0x63fCF94801b3b54350dA98DdbEEFd5423951B9D1 
 https://sepolia-blockscout.lisk.com/address/0x63fCF94801b3b54350dA98DdbEEFd5423951B9D1
 
-GigMarketplace deployed at: 0xb9193980057233220b6284Af1E1e1F232fAc3065
+GigMarketplace deployed at: 0xb9193980057233220b6284Af1E1e1F232fAc3065  
 https://sepolia-blockscout.lisk.com/address/0xb9193980057233220b6284Af1E1e1F232fAc3065
 
-ReviewSystem deployed at: 0xc7e0e3aF97292fD61d20Ae227008d6BD7DeAb622
+ReviewSystem deployed at: 0xc7e0e3aF97292fD61d20Ae227008d6BD7DeAb622    
 https://sepolia-blockscout.lisk.com/address/0xc7e0e3aF97292fD61d20Ae227008d6BD7DeAb622
 
-ChatSystem deployed at: 0x40AB41830f4E2BBE43E826948421376c16D46Ca1
+ChatSystem deployed at: 0x40AB41830f4E2BBE43E826948421376c16D46Ca1  
 https://sepolia-blockscout.lisk.com/address/0x40AB41830f4E2BBE43E826948421376c16D46Ca1
