@@ -77,7 +77,7 @@ https://sepolia-blockscout.lisk.com/address/0x3BE4f07114C2c879ddC56969ec87EC4036
 CraftCoin deployed at: 0x1BDf32e62d0ac79bb87Dd70205C94CC26A824101   
 https://sepolia-blockscout.lisk.com/address/0x1BDf32e62d0ac79bb87Dd70205C94CC26A824101
 
-PaymentProcessor deployed at: 0x63fCF94801b3b54350dA98DdbEEFd5423951B9D1 
+PaymentProcessor deployed at: 0x63fCF94801b3b54350dA98DdbEEFd5423951B9D1    
 https://sepolia-blockscout.lisk.com/address/0x63fCF94801b3b54350dA98DdbEEFd5423951B9D1
 
 GigMarketplace deployed at: 0xb9193980057233220b6284Af1E1e1F232fAc3065  
