@@ -19,13 +19,9 @@ contract ReviewSystemTest is Test {
 
     address relayer = vm.addr(1);
     address client = vm.addr(2);
-    uint256 clientPrivateKey = 2;
     address client2 = vm.addr(3);
-    uint256 client2PrivateKey = 3;
     address artisan = vm.addr(4);
-    uint256 artisanPrivateKey = 4;
     address artisan2 = vm.addr(5);
-    uint256 artisan2PrivateKey = 5;
 
     bytes32 databaseId = keccak256("databaseId");
     bytes32 databaseId2 = keccak256("databaseId2");
@@ -46,11 +42,13 @@ contract ReviewSystemTest is Test {
         vm.startPrank(relayer);
         registry.registerAsClientFor(client, "clientIpfs");
         token.claimFor(client);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         registry.registerAsArtisanFor(artisan, "artisanIpfs");
         craftCoin.mintFor(artisan);
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
@@ -82,11 +80,13 @@ contract ReviewSystemTest is Test {
         vm.startPrank(relayer);
         registry.registerAsClientFor(client2, "clientIpfs");
         token.claimFor(client2);
+        token.approveFor(client2, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client2, rootHash, databaseId, 100 * 10 ** 6);
 
         registry.registerAsArtisanFor(artisan2, "artisanIpfs");
         craftCoin.mintFor(artisan2);
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan2, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan2, databaseId);
 
         gigMarketplace.hireArtisanFor(client2, databaseId, artisan2);
@@ -100,10 +100,13 @@ contract ReviewSystemTest is Test {
         vm.startPrank(relayer);
         registry.registerAsClientFor(client2, "clientIpfs");
         token.claimFor(client2);
+        token.approveFor(client2, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client2, rootHash, databaseId, 100 * 10 ** 6);
 
         registry.registerAsArtisanFor(artisan2, "artisanIpfs");
         craftCoin.mintFor(artisan2);
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan2, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan2, databaseId);
 
         gigMarketplace.hireArtisanFor(client2, databaseId, artisan2);
@@ -173,11 +176,13 @@ contract ReviewSystemTest is Test {
         vm.startPrank(relayer);
         registry.registerAsClientFor(client2, "clientIpfs");
         token.claimFor(client2);
+        token.approveFor(client2, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client2, rootHash, databaseId, 100 * 10 ** 6);
 
         registry.registerAsArtisanFor(artisan2, "artisanIpfs");
         craftCoin.mintFor(artisan2);
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan2, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan2, databaseId);
 
         gigMarketplace.hireArtisanFor(client2, databaseId, artisan2);
@@ -191,11 +196,13 @@ contract ReviewSystemTest is Test {
         vm.startPrank(relayer);
         registry.registerAsClientFor(client2, "clientIpfs");
         token.claimFor(client2);
+        token.approveFor(client2, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client2, rootHash, databaseId, 100 * 10 ** 6);
 
         registry.registerAsArtisanFor(artisan2, "artisanIpfs");
         craftCoin.mintFor(artisan2);
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan2, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan2, databaseId);
 
         gigMarketplace.hireArtisanFor(client2, databaseId, artisan2);
