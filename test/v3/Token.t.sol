@@ -38,7 +38,7 @@ contract TokenTest is Test {
         vm.stopPrank();
     }
 
-    function testClaimFor() public {
+    function testClaim() public {
         vm.prank(relayer);
         token.claimFor(user1);
         assertEq(token.balanceOf(user1), 1000 * 10 ** 6);

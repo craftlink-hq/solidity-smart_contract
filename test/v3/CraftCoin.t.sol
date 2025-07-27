@@ -22,14 +22,14 @@ contract CraftCoinTest is Test {
         registry.registerAsArtisanFor(artisan, "ipfsHash");
     }
 
-    function testMintFor() public {
+    function testMint() public {
         vm.prank(relayer);
         craftCoin.mintFor(artisan);
 
         assertEq(craftCoin.balanceOf(artisan), 50 * 10 ** 18);
     }
 
-    function testBurnFor() public {
+    function testBurn() public {
         vm.prank(relayer);
         craftCoin.mintFor(artisan);
 
