@@ -42,13 +42,11 @@ contract ChatSystemTest is Test {
         registry.registerAsArtisanFor(artisan, "artisanIpfs");
         craftCoin.mintFor(artisan);
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
-        console.log("Required CFT:", requiredCFT);
         craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
-        vm.stopPrank();
 
-        vm.prank(client);
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
+        vm.stopPrank();
     }
 
     function testStartConversation() public {
@@ -119,6 +117,13 @@ contract ChatSystemTest is Test {
         chatSystem.startConversationFor(client, conversationId, databaseId, keccak256("initialHash"));
         (bytes32 rootHash, bool isActive) = chatSystem.getConversationDetails(conversationId);
         assertEq(rootHash, keccak256("initialHash"));
+        assertTrue(isActive);
+    }
+
+    function testIsConversationActive() public {
+        vm.prank(relayer);
+        chatSystem.startConversationFor(client, conversationId, databaseId, keccak256("initialHash"));
+        bool isActive = chatSystem.isConversationActive(conversationId);
         assertTrue(isActive);
     }
 }
