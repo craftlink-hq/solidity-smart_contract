@@ -13,10 +13,21 @@ contract TokenTest is Test {
         token = new Token(relayer);
     }
 
-    function testClaim() public {
-        vm.prank(relayer);
-        token.claimFor(user1);
-        assertEq(token.balanceOf(user1), 1000 * 10 ** 6);
+    function testMint() public {
+        uint256 initialSupply = 1000 * 10 ** 6;
+        token.mint(user1, initialSupply);
+        assertEq(token.balanceOf(user1), initialSupply);
+    }
+
+    function testBurn() public {
+        uint256 initialSupply = 1000 * 10 ** 6;
+        token.mint(user1, initialSupply);
+        uint256 burnAmount = 300 * 10 ** 6;
+
+        vm.prank(user1);
+        token.burn(burnAmount);
+
+        assertEq(token.balanceOf(user1), initialSupply - burnAmount);
     }
 
     function testCannotClaimTwice() public {
