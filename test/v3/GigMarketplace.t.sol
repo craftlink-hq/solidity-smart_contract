@@ -17,13 +17,9 @@ contract GigMarketplaceTest is Test {
 
     address relayer = vm.addr(1);
     address client = vm.addr(2);
-    uint256 clientPrivateKey = 2;
     address client2 = vm.addr(3);
-    uint256 client2PrivateKey = 3;
     address artisan = vm.addr(4);
-    uint256 artisanPrivateKey = 4;
     address artisan2 = vm.addr(5);
-    uint256 artisan2PrivateKey = 5;
 
     bytes32 databaseId = keccak256("databaseId");
     bytes32 databaseId2 = keccak256("databaseId2");
@@ -59,16 +55,7 @@ contract GigMarketplaceTest is Test {
 
     function testCreateGig() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
-        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
-        vm.stopPrank();
-
-        (address gigClient,,,,,,) = gigMarketplace.getGigInfo(databaseId);
-        assertEq(gigClient, client);
-    }
-
-    function testCreateGigFor() public {
-        vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
         vm.stopPrank();
 
@@ -88,10 +75,12 @@ contract GigMarketplaceTest is Test {
         gigMarketplace.createGigFor(artisan, rootHash, databaseId, 100 * 10 ** 6);
     }
 
-    function testCreateMultipleGigFor() public {
+    function testCreateMultipleGigs() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
+        token.approveFor(client2, address(paymentProcessor), 200 * 10 ** 6);
         gigMarketplace.createGigFor(client2, rootHash2, databaseId2, 200 * 10 ** 6);
         vm.stopPrank();
 
@@ -105,7 +94,7 @@ contract GigMarketplaceTest is Test {
 
     function testUpdateGigInfo() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
         gigMarketplace.updateGigInfoFor(client, databaseId, rootHash2);
         vm.stopPrank();
@@ -115,7 +104,7 @@ contract GigMarketplaceTest is Test {
     }
 
     function testCannotUpdateGigInfoAsNotGigOwner() public {
-        vm.startPrank(artisan);
+        vm.startPrank(relayer);
         vm.expectRevert("Not gig owner");
         gigMarketplace.updateGigInfoFor(client, databaseId, rootHash2);
         vm.stopPrank();
@@ -126,18 +115,17 @@ contract GigMarketplaceTest is Test {
 
     function testCannotUpdateCompletedGig() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
-
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
-
         gigMarketplace.markCompleteFor(artisan, databaseId);
-
         gigMarketplace.confirmCompleteFor(client, databaseId);
+
         vm.expectRevert("Gig finished");
         gigMarketplace.updateGigInfoFor(client, databaseId, rootHash2);
         vm.stopPrank();
@@ -145,13 +133,12 @@ contract GigMarketplaceTest is Test {
 
     function testCannotUpdateClosedGig() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
-
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
-        vm.stopPrank();
 
         gigMarketplace.closeGigFor(client, databaseId);
         vm.expectRevert("Gig finished");
@@ -161,17 +148,20 @@ contract GigMarketplaceTest is Test {
 
     function testGetLatestRootHash() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, keccak256("rootHash1"), keccak256("databaseId1"), 100 * 10 ** 6);
 
+        token.approveFor(client2, address(paymentProcessor), 200 * 10 ** 6);
         gigMarketplace.createGigFor(
             client2, keccak256("rootHash2"), keccak256("databaseId2"), 200 * 10 ** 6
         );
 
-
+        token.approveFor(client, address(paymentProcessor), 300 * 10 ** 6);
         gigMarketplace.createGigFor(
             client, keccak256("rootHash3"), keccak256("databaseId3"), 300 * 10 ** 6
         );
 
+        token.approveFor(client2, address(paymentProcessor), 400 * 10 ** 6);
         gigMarketplace.createGigFor(
             client2, keccak256("rootHash4"), keccak256("databaseId4"), 400 * 10 ** 6
         );
@@ -183,9 +173,11 @@ contract GigMarketplaceTest is Test {
 
     function testApplyForGig() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
         vm.stopPrank();
 
@@ -197,6 +189,7 @@ contract GigMarketplaceTest is Test {
         vm.startPrank(relayer);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         vm.expectRevert("Invalid gig ID");
         gigMarketplace.applyForGigFor(artisan, databaseId);
         vm.stopPrank();
@@ -206,14 +199,12 @@ contract GigMarketplaceTest is Test {
 
     function testCannotApplyToClosedGig() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
         gigMarketplace.closeGigFor(client, databaseId);
-        vm.stopPrank();
-
-        vm.startPrank(relayer);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         vm.expectRevert("Gig is closed");
         gigMarketplace.applyForGigFor(artisan, databaseId);
         vm.stopPrank();
@@ -221,21 +212,14 @@ contract GigMarketplaceTest is Test {
 
     function testCannotApplyToGigWithHiredArtisan() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
-        vm.stopPrank();
-
-        vm.startPrank(relayer);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
-        vm.stopPrank();
-
-        vm.startPrank(relayer);
-        uint256 deadline2 = block.timestamp + 1 days;
-        uint256 requiredCFT2 = gigMarketplace.getRequiredCFT(databaseId);
     
         vm.expectRevert("Artisan already hired");
         gigMarketplace.applyForGigFor(artisan2, databaseId);
@@ -244,13 +228,11 @@ contract GigMarketplaceTest is Test {
 
     function testCannotApplyForSameGigAgain() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
-        vm.stopPrank();
-
-        vm.startPrank(relayer);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         vm.expectRevert("Already applied");
@@ -260,12 +242,14 @@ contract GigMarketplaceTest is Test {
 
     function testClientCannotApplyToTheirOwnGig() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         registry.registerAsArtisanFor(client, "clientArtisanIpfs");
         craftCoin.mintFor(client);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
 
         vm.expectRevert("Cannot apply to your own gig");
         gigMarketplace.applyForGigFor(client, databaseId);
@@ -274,9 +258,11 @@ contract GigMarketplaceTest is Test {
 
     function testHireArtisan() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
@@ -296,9 +282,11 @@ contract GigMarketplaceTest is Test {
 
     function testNotGigOwnerCannotHireArtisan() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         vm.expectRevert("Not gig owner");
@@ -308,18 +296,16 @@ contract GigMarketplaceTest is Test {
 
     function testCannotHireAnotherArtisanAfterArtisanHasBeenHired() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
         vm.stopPrank();
 
         vm.startPrank(relayer);
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
-
-        uint256 deadline2 = block.timestamp + 1 days;
-        uint256 requiredCFT2 = gigMarketplace.getRequiredCFT(databaseId);
 
         vm.expectRevert("Artisan already hired");
         gigMarketplace.applyForGigFor(artisan2, databaseId);
@@ -328,10 +314,11 @@ contract GigMarketplaceTest is Test {
 
     function testCannotHireArtisanForClosedGig() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.closeGigFor(client, databaseId);
@@ -344,7 +331,7 @@ contract GigMarketplaceTest is Test {
 
     function testCannotHireArtisanThatDidNotApply() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
         vm.stopPrank();
 
@@ -355,9 +342,11 @@ contract GigMarketplaceTest is Test {
 
     function testMarkComplete() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
@@ -377,6 +366,7 @@ contract GigMarketplaceTest is Test {
 
     function testCannotMarkCompleteAsNotHiredArtisan() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         vm.expectRevert("Not hired artisan");
@@ -386,9 +376,11 @@ contract GigMarketplaceTest is Test {
 
     function testCannotMarkCompletedGigAsComplete() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
@@ -401,9 +393,11 @@ contract GigMarketplaceTest is Test {
 
     function testConfirmComplete() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
@@ -424,9 +418,11 @@ contract GigMarketplaceTest is Test {
 
     function testNotGigOwnerCannotConfirmComplete() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
@@ -439,9 +435,11 @@ contract GigMarketplaceTest is Test {
 
     function testCannotConfirmCompleteWhenNotMarkedComplete() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         vm.expectRevert("Gig not completed || Closed");
@@ -451,9 +449,11 @@ contract GigMarketplaceTest is Test {
 
     function testCannotConfirmCompleteForAlreadyCompletedGig() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
@@ -467,10 +467,11 @@ contract GigMarketplaceTest is Test {
 
     function testCannotConfirmClosedGigAsComplete() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.closeGigFor(client, databaseId);
@@ -481,9 +482,9 @@ contract GigMarketplaceTest is Test {
         gigMarketplace.confirmCompleteFor(client, databaseId);
     }
 
-    function testCloseGigFor() public {
+    function testCloseGig() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
         gigMarketplace.closeGigFor(client, databaseId);
         vm.stopPrank();
@@ -504,18 +505,21 @@ contract GigMarketplaceTest is Test {
 
     function testNotGigOwnerCannotCloseGigFor() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         vm.expectRevert("Not gig owner");
-        gigMarketplace.closeGigFor(client, databaseId);
+        gigMarketplace.closeGigFor(client2, databaseId);
         vm.stopPrank();
     }
 
     function testCannotCloseActiveGig() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
@@ -528,9 +532,11 @@ contract GigMarketplaceTest is Test {
 
     function testCannotCloseCompletedGig() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
@@ -544,7 +550,7 @@ contract GigMarketplaceTest is Test {
 
     function testCannotCloseGigForThatIsAlreadyClosed() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
         gigMarketplace.closeGigFor(client, databaseId);
 
@@ -555,8 +561,10 @@ contract GigMarketplaceTest is Test {
 
     function testGetClientGigReturnsCountZeroIfArtisanNotHired() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
+        token.approveFor(client2, address(paymentProcessor), 200 * 10 ** 6);
         gigMarketplace.createGigFor(client2, rootHash2, databaseId2, 200 * 10 ** 6);
         vm.stopPrank();
 
@@ -569,9 +577,11 @@ contract GigMarketplaceTest is Test {
 
     function testGetClientGigReturnsCountOneIfArtisanHired() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
@@ -583,7 +593,7 @@ contract GigMarketplaceTest is Test {
 
     function testGetClientGigReturnsCountZeroIfGigClosed() public {
         vm.startPrank(relayer);
-        token.approve(address(paymentProcessor), 100 * 10 ** 6);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
         gigMarketplace.closeGigFor(client, databaseId);
         vm.stopPrank();
@@ -594,6 +604,7 @@ contract GigMarketplaceTest is Test {
 
     function testGetClientAndArtisanCount() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 600 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         gigMarketplace.createGigFor(client, rootHash2, databaseId2, 200 * 10 ** 6);
@@ -601,12 +612,15 @@ contract GigMarketplaceTest is Test {
         gigMarketplace.createGigFor(client, rootHash3, databaseId3, 300 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         uint256 requiredCFT2 = gigMarketplace.getRequiredCFT(databaseId2);
+        craftCoin.approveFor(artisan2, address(gigMarketplace), requiredCFT2);
         gigMarketplace.applyForGigFor(artisan2, databaseId2);
 
         uint256 requiredCFT3 = gigMarketplace.getRequiredCFT(databaseId3);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT3);
         gigMarketplace.applyForGigFor(artisan, databaseId3);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
@@ -626,9 +640,11 @@ contract GigMarketplaceTest is Test {
 
     function testGetArtisanAppliedGig() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
         vm.stopPrank();
 
@@ -639,14 +655,18 @@ contract GigMarketplaceTest is Test {
 
     function testGetArtisanAppliedMultipleGigs() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
+        token.approveFor(client2, address(paymentProcessor), 200 * 10 ** 6);
         gigMarketplace.createGigFor(client2, rootHash2, databaseId2, 200 * 10 ** 6);
 
         uint256 requiredCFT2 = gigMarketplace.getRequiredCFT(databaseId2);
+        craftCoin.approveFor(artisan2, address(gigMarketplace), requiredCFT2);
         gigMarketplace.applyForGigFor(artisan2, databaseId2);
         vm.stopPrank();
 
@@ -661,14 +681,18 @@ contract GigMarketplaceTest is Test {
 
     function testGetAllGigsAppliedByOneArtisan() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
+        token.approveFor(client2, address(paymentProcessor), 200 * 10 ** 6);
         gigMarketplace.createGigFor(client2, rootHash2, databaseId2, 200 * 10 ** 6);
 
         uint256 requiredCFT2 = gigMarketplace.getRequiredCFT(databaseId2);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT2);
         gigMarketplace.applyForGigFor(artisan, databaseId2);
 
         vm.stopPrank();
@@ -680,8 +704,10 @@ contract GigMarketplaceTest is Test {
 
     function testGetClientCreatedGigs() public {
         vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
         gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
 
+        token.approveFor(client2, address(paymentProcessor), 200 * 10 ** 6);
         gigMarketplace.createGigFor(client2, rootHash2, databaseId2, 200 * 10 ** 6);
         vm.stopPrank();
 
@@ -692,5 +718,59 @@ contract GigMarketplaceTest is Test {
         bytes32[] memory client2Gigs = gigMarketplace.getClientCreatedGigs(client2);
         assertEq(client2Gigs.length, 1);
         assertEq(client2Gigs[0], databaseId2);
+    }
+
+    function testGetClientCreatedGigsMultiple() public {
+        vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
+
+        token.approveFor(client2, address(paymentProcessor), 200 * 10 ** 6);
+        gigMarketplace.createGigFor(client2, rootHash2, databaseId2, 200 * 10 ** 6);
+
+        token.approveFor(client, address(paymentProcessor), 300 * 10 ** 6);
+        gigMarketplace.createGigFor(client, rootHash3, databaseId3, 300 * 10 ** 6);
+        vm.stopPrank();
+
+        bytes32[] memory clientGigs = gigMarketplace.getClientCreatedGigs(client);
+        assertEq(clientGigs.length, 2);
+        assertEq(clientGigs[0], databaseId);
+        assertEq(clientGigs[1], databaseId3);
+
+        bytes32[] memory client2Gigs = gigMarketplace.getClientCreatedGigs(client2);
+        assertEq(client2Gigs.length, 1);
+        assertEq(client2Gigs[0], databaseId2);
+    }
+
+    function testGetArtisanAppliedGigs() public {
+        vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
+        gigMarketplace.applyForGigFor(artisan, databaseId);
+        vm.stopPrank();
+
+        bytes32[] memory artisanAppliedGigs = gigMarketplace.getArtisanAppliedGigs(artisan);
+        assertEq(artisanAppliedGigs.length, 1);
+        assertEq(artisanAppliedGigs[0], databaseId);
+    }
+
+    function testHasAppliedForGig() public {
+        vm.startPrank(relayer);
+        token.approveFor(client, address(paymentProcessor), 100 * 10 ** 6);
+        gigMarketplace.createGigFor(client, rootHash, databaseId, 100 * 10 ** 6);
+
+        uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);
+        craftCoin.approveFor(artisan, address(gigMarketplace), requiredCFT);
+        gigMarketplace.applyForGigFor(artisan, databaseId);
+        vm.stopPrank();
+
+        bool hasApplied = gigMarketplace.hasAppliedForGig(artisan, databaseId);
+        assertTrue(hasApplied);
+
+        bool hasNotApplied = gigMarketplace.hasAppliedForGig(artisan2, databaseId);
+        assertFalse(hasNotApplied);
     }
 }

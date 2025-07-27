@@ -36,7 +36,6 @@ contract CraftCoinTest is Test {
         uint256 initialBalance = craftCoin.balanceOf(artisan);
         uint256 burnAmount = 20 * 10 ** 18;
 
-        vm.prank(relayer);
         craftCoin.burnFor(artisan, burnAmount);
 
         assertEq(craftCoin.balanceOf(artisan), initialBalance - burnAmount);

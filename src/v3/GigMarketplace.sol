@@ -249,7 +249,7 @@ contract GigMarketplace {
         return clientCreatedGigs[_client];
     }
 
-    function hasAppliedForGig(bytes32 _databaseId, address _artisan) external view returns (bool) {
+    function hasAppliedForGig(address _artisan, bytes32 _databaseId) external view returns (bool) {
         uint256 thisGigId = indexes[_databaseId];
 
         require(thisGigId <= gigCounter && thisGigId != 0, "Invalid gig ID");

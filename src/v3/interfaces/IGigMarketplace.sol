@@ -37,5 +37,5 @@ interface IGigMarketplace {
     function getArtisanHiredCount(address _artisan) external view returns (uint256);
     function getArtisanAppliedGigs(address _artisan) external view returns (bytes32[] memory);
     function getClientCreatedGigs(address _client) external view returns (bytes32[] memory);
-    function hasAppliedForGig(bytes32 _databaseId, address _artisan) external view returns (bool);
+    function hasAppliedForGig(address _artisan, bytes32 _databaseId) external view returns (bool);
 }

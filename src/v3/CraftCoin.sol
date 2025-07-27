@@ -42,7 +42,7 @@ contract CraftCoin is ERC20, Ownable {
         emit Minted(_user, TOKENS_PER_MINT);
     }
 
-    function burnFor(address _user, uint256 amount) external onlyRelayer {
+    function burnFor(address _user, uint256 amount) external {
         _burn(_user, amount);
         emit Burned(_user, amount);
     }
