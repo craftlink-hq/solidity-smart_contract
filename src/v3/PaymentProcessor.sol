@@ -38,7 +38,7 @@ contract PaymentProcessor {
         platformWallet = msg.sender;
     }
 
-    function createPayment(address _client, uint256 _amount) external {
+    function createPaymentFor(address _client, uint256 _amount) external {
         require(_amount > 10000000, "Amount must be greater than 10 USDT");
         require(token.balanceOf(_client) >= _amount, "Insufficient token balance");
 

@@ -7,7 +7,7 @@ interface IPaymentProcessor {
     event PaymentRefunded(uint256 indexed paymentId, uint256 amountToClient);
     event PlatformFeeUpdated(uint256 newFeePercentage);
 
-    function createPayment(address _client, uint256 _amount) external;
+    function createPaymentFor(address _client, uint256 _amount) external;
     function currentPaymentId() external view returns (uint256);
     function releaseArtisanFundsFor(address artisan, uint256 _paymentId) external;
     function refundClientFunds(uint256 _paymentId) external;

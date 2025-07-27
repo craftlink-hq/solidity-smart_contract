@@ -61,7 +61,7 @@ contract GigMarketplace {
         require(registry.isClient(_client), "Not a client");
 
         gigCounter++;
-        paymentProcessor.createPayment(_client, _budget);
+        paymentProcessor.createPaymentFor(_client, _budget);
 
         gigs[gigCounter] = GigInfo({
             client: _client,
