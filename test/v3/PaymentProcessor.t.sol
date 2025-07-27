@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "../src/v2/PaymentProcessor.sol";
-import "../src/v2/Token.sol";
+import "../../src/v3/PaymentProcessor.sol";
+import "../../src/v3/Token.sol";
 
 contract PaymentProcessorTest is Test {
     Token token;
@@ -16,8 +16,8 @@ contract PaymentProcessorTest is Test {
         token = new Token(relayer);
         paymentProcessor = new PaymentProcessor(relayer, address(token));
 
-        vm.startPrank(client);
-        token.claim(); // 1000 USDT
+        vm.startPrank(relayer);
+        token.claimFor(client); // 1000 USDT
         token.approve(address(paymentProcessor), 1000 * 10 ** 6);
         vm.stopPrank();
     }
@@ -45,8 +45,8 @@ contract PaymentProcessorTest is Test {
     function testReleaseArtisanFunds() public {
         vm.prank(client);
         paymentProcessor.createPayment(client, 100 * 10 ** 6);
-        vm.prank(artisan);
-        paymentProcessor.releaseArtisanFunds(artisan, 1);
+        vm.prank(relayer);
+        paymentProcessor.releaseArtisanFundsFor(artisan, 1);
         assertEq(token.balanceOf(artisan), 95 * 10 ** 6); // 5% fee
     }
 
@@ -61,8 +61,8 @@ contract PaymentProcessorTest is Test {
     function testCannotReleaseClientFundsMoreThanOnce() public {
         vm.prank(client);
         paymentProcessor.createPayment(client, 100 * 10 ** 6);
-        vm.prank(artisan);
-        paymentProcessor.releaseArtisanFunds(artisan, 1);
+        vm.prank(relayer);
+        paymentProcessor.releaseArtisanFundsFor(artisan, 1);
         vm.expectRevert("Payment already released");
         vm.prank(client);
         paymentProcessor.refundClientFunds(1);
@@ -92,11 +92,11 @@ contract PaymentProcessorTest is Test {
     function testPaymentAlreadyReleased() public {
         vm.prank(client);
         paymentProcessor.createPayment(client, 100 * 10 ** 6);
-        vm.prank(artisan);
-        paymentProcessor.releaseArtisanFunds(artisan, 1);
+        vm.prank(relayer);
+        paymentProcessor.releaseArtisanFundsFor(artisan, 1);
         vm.expectRevert("Payment already released");
-        vm.prank(artisan);
-        paymentProcessor.releaseArtisanFunds(artisan, 1);
+        vm.prank(relayer);
+        paymentProcessor.releaseArtisanFundsFor(artisan, 1);
     }
 
     function testReleaseArtisanFundsFor() public {
@@ -111,8 +111,8 @@ contract PaymentProcessorTest is Test {
         for (uint256 i = 0; i < 5; i++) {
             vm.prank(client);
             paymentProcessor.createPayment(client, 100 * 10 ** 6);
-            vm.prank(artisan);
-            paymentProcessor.releaseArtisanFunds(artisan, i + 1);
+            vm.prank(client);
+            paymentProcessor.releaseArtisanFundsFor(artisan, i + 1);
         }
         assertEq(token.balanceOf(artisan), 475 * 10 ** 6); // 5 payments of 95 USDT each
     }
@@ -124,16 +124,16 @@ contract PaymentProcessorTest is Test {
         }
         vm.prank(client);
         paymentProcessor.createPayment(client, 100 * 10 ** 6);
-        vm.prank(artisan);
-        paymentProcessor.releaseArtisanFunds(artisan, 5); // Only release the 5th payment
+        vm.prank(relayer);
+        paymentProcessor.releaseArtisanFundsFor(artisan, 5); // Only release the 5th payment
         assertEq(token.balanceOf(artisan), 95 * 10 ** 6);
     }
 
     function testAmountSpentAndMade() public {
         vm.prank(client);
         paymentProcessor.createPayment(client, 100 * 10 ** 6);
-        vm.prank(artisan);
-        paymentProcessor.releaseArtisanFunds(artisan, 1);
+        vm.prank(relayer);
+        paymentProcessor.releaseArtisanFundsFor(artisan, 1);
         assertEq(paymentProcessor.getClientAmountSpent(client), 100 * 10 ** 6);
         assertEq(paymentProcessor.getArtisanAmountMade(artisan), 95 * 10 ** 6 + 5 * 10 ** 6); // platform fee isn't deducted from artisan's earnings
     }
@@ -162,8 +162,8 @@ contract PaymentProcessorTest is Test {
     function testRefundPaymentAlreadyReleased() public {
         vm.prank(client);
         paymentProcessor.createPayment(client, 100 * 10 ** 6);
-        vm.prank(artisan);
-        paymentProcessor.releaseArtisanFunds(artisan, 1);
+        vm.prank(relayer);
+        paymentProcessor.releaseArtisanFundsFor(artisan, 1);
         vm.expectRevert("Payment already released");
         vm.prank(client);
         paymentProcessor.refundClientFunds(1);

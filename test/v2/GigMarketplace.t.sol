@@ -2,11 +2,11 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "../src/v2/GigMarketplace.sol";
-import "../src/v2/Registry.sol";
-import "../src/v2/PaymentProcessor.sol";
-import "../src/v2/Token.sol";
-import "../src/v2/CraftCoin.sol";
+import "../../src/v2/GigMarketplace.sol";
+import "../../src/v2/Registry.sol";
+import "../../src/v2/PaymentProcessor.sol";
+import "../../src/v2/Token.sol";
+import "../../src/v2/CraftCoin.sol";
 
 contract GigMarketplaceTest is Test {
     Registry registry;

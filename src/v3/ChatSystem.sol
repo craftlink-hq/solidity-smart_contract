@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "./interfaces/IGigMarketplace.sol";
+
+contract ChatSystem {
+    struct ChatInfo {
+        bytes32 rootHash;
+        bool isActive;
+    }
+
+    IGigMarketplace public immutable gigMarketplace;
+    mapping(bytes32 => ChatInfo) public conversations;
+
+    event ConversationStarted(bytes32 indexed conversationId, bytes32 rootHash);
+    event ConversationUpdated(bytes32 indexed conversationId, bytes32 newRootHash);
+
+    constructor(address _gigMarketplace) {
+        gigMarketplace = IGigMarketplace(_gigMarketplace);
+    }
+
+    function startConversationFor(address _user, bytes32 _conversationId, bytes32 _databaseId, bytes32 _initialRootHash) external {
+        (address client, address hiredArtisan,,,,,) = gigMarketplace.getGigInfo(_databaseId);
+        require(_user == client || _user == hiredArtisan, "Not authorized");
+        require(!conversations[_conversationId].isActive, "Already exists");
+
+        conversations[_conversationId] = ChatInfo({rootHash: _initialRootHash, isActive: true});
+
+        emit ConversationStarted(_conversationId, _initialRootHash);
+    }
+
+    function updateConversationFor(address _user, bytes32 _conversationId, bytes32 _databaseId, bytes32 _newRootHash) external {
+        ChatInfo storage chat = conversations[_conversationId];
+        require(chat.isActive, "Chat not active");
+
+        (address client, address hiredArtisan,,,,,) = gigMarketplace.getGigInfo(_databaseId);
+        require(_user == client || _user == hiredArtisan, "Not authorized");
+
+        chat.rootHash = _newRootHash;
+        emit ConversationUpdated(_conversationId, _newRootHash);
+    }
+
+    function getConversationDetails(bytes32 _conversationId) external view returns (bytes32 rootHash, bool isActive) {
+        ChatInfo memory chat = conversations[_conversationId];
+        return (chat.rootHash, chat.isActive);
+    }
+
+    function isConversationActive(bytes32 _conversationId) external view returns (bool) {
+        return conversations[_conversationId].isActive;
+    }
+}
