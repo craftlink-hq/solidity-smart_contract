@@ -152,11 +152,11 @@ contract ReviewSystem {
         return clientReviews[_client].length;
     }
 
-    function getReviewDetails(
-        address _reviewer,
-        address _reviewee,
-        bytes32 _databaseId
-    ) external view returns (ReviewInfo memory) {
+    function getReviewDetails(address _reviewer, address _reviewee, bytes32 _databaseId)
+        external
+        view
+        returns (ReviewInfo memory)
+    {
         ReviewInfo[] storage reviews = artisanReviews[_reviewee];
         for (uint256 i = 0; i < reviews.length; i++) {
             if (reviews[i].reviewer == _reviewer && reviews[i].databaseId == _databaseId) {

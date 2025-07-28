@@ -52,12 +52,10 @@ contract GigMarketplace {
         craftCoin = ICraftCoin(_craftCoin);
     }
 
-    function createGigFor(
-        address _client,
-        bytes32 _rootHash,
-        bytes32 _databaseId,
-        uint256 _budget
-    ) external onlyRelayer {
+    function createGigFor(address _client, bytes32 _rootHash, bytes32 _databaseId, uint256 _budget)
+        external
+        onlyRelayer
+    {
         require(registry.isClient(_client), "Not a client");
 
         gigCounter++;
@@ -81,11 +79,7 @@ contract GigMarketplace {
         emit GigCreated(gigCounter, _client, _rootHash);
     }
 
-    function updateGigInfoFor(
-        address _client,
-        bytes32 _databaseId,
-        bytes32 _newRootHash
-    ) external onlyRelayer {
+    function updateGigInfoFor(address _client, bytes32 _databaseId, bytes32 _newRootHash) external onlyRelayer {
         uint256 thisGigId = indexes[_databaseId];
 
         GigInfo storage gig = gigs[thisGigId];
@@ -100,10 +94,7 @@ contract GigMarketplace {
         return gigs[gigCounter].rootHash;
     }
 
-    function applyForGigFor(address _artisan, bytes32 _databaseId)
-        external
-        onlyRelayer
-    {
+    function applyForGigFor(address _artisan, bytes32 _databaseId) external onlyRelayer {
         uint256 thisGigId = indexes[_databaseId];
         GigInfo storage gig = gigs[thisGigId];
 

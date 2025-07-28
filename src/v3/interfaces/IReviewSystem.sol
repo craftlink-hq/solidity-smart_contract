@@ -30,9 +30,8 @@ interface IReviewSystem {
     function getClientAverageRating(address _client) external view returns (uint256);
     function getArtisanReviewCount(address _artisan) external view returns (uint256);
     function getClientReviewCount(address _client) external view returns (uint256);
-    function getReviewDetails(
-        address _reviewer,
-        address _reviewee,
-        bytes32 _databaseId
-    ) external view returns (ReviewInfo memory);
+    function getReviewDetails(address _reviewer, address _reviewee, bytes32 _databaseId)
+        external
+        view
+        returns (ReviewInfo memory);
 }

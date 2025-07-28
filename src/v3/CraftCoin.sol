@@ -20,10 +20,7 @@ contract CraftCoin is ERC20, Ownable {
         _;
     }
 
-    constructor(address _relayer, address _registry)
-        ERC20("CraftCoin", "CFT")
-        Ownable(msg.sender)
-    {
+    constructor(address _relayer, address _registry) ERC20("CraftCoin", "CFT") Ownable(msg.sender) {
         relayer = _relayer;
         registry = IRegistry(_registry);
     }

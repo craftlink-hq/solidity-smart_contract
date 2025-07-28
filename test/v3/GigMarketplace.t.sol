@@ -152,19 +152,13 @@ contract GigMarketplaceTest is Test {
         gigMarketplace.createGigFor(client, keccak256("rootHash1"), keccak256("databaseId1"), 100 * 10 ** 6);
 
         token.approveFor(client2, address(paymentProcessor), 200 * 10 ** 6);
-        gigMarketplace.createGigFor(
-            client2, keccak256("rootHash2"), keccak256("databaseId2"), 200 * 10 ** 6
-        );
+        gigMarketplace.createGigFor(client2, keccak256("rootHash2"), keccak256("databaseId2"), 200 * 10 ** 6);
 
         token.approveFor(client, address(paymentProcessor), 300 * 10 ** 6);
-        gigMarketplace.createGigFor(
-            client, keccak256("rootHash3"), keccak256("databaseId3"), 300 * 10 ** 6
-        );
+        gigMarketplace.createGigFor(client, keccak256("rootHash3"), keccak256("databaseId3"), 300 * 10 ** 6);
 
         token.approveFor(client2, address(paymentProcessor), 400 * 10 ** 6);
-        gigMarketplace.createGigFor(
-            client2, keccak256("rootHash4"), keccak256("databaseId4"), 400 * 10 ** 6
-        );
+        gigMarketplace.createGigFor(client2, keccak256("rootHash4"), keccak256("databaseId4"), 400 * 10 ** 6);
         vm.stopPrank();
 
         bytes32 latestRootHash = gigMarketplace.getLatestRootHash();
@@ -220,7 +214,7 @@ contract GigMarketplaceTest is Test {
         gigMarketplace.applyForGigFor(artisan, databaseId);
 
         gigMarketplace.hireArtisanFor(client, databaseId, artisan);
-    
+
         vm.expectRevert("Artisan already hired");
         gigMarketplace.applyForGigFor(artisan2, databaseId);
         vm.stopPrank();

@@ -38,7 +38,7 @@ contract ChatSystemTest is Test {
         token.claimFor(client);
         token.approveFor(client, address(paymentProcessor), 1000 * 10 ** 6);
         gigMarketplace.createGigFor(client, keccak256("rootHash"), databaseId, 100 * 10 ** 6);
-  
+
         registry.registerAsArtisanFor(artisan, "artisanIpfs");
         craftCoin.mintFor(artisan);
         uint256 requiredCFT = gigMarketplace.getRequiredCFT(databaseId);

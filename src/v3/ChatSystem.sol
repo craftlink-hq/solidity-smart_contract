@@ -19,7 +19,9 @@ contract ChatSystem {
         gigMarketplace = IGigMarketplace(_gigMarketplace);
     }
 
-    function startConversationFor(address _user, bytes32 _conversationId, bytes32 _databaseId, bytes32 _initialRootHash) external {
+    function startConversationFor(address _user, bytes32 _conversationId, bytes32 _databaseId, bytes32 _initialRootHash)
+        external
+    {
         (address client, address hiredArtisan,,,,,) = gigMarketplace.getGigInfo(_databaseId);
         require(_user == client || _user == hiredArtisan, "Not authorized");
         require(!conversations[_conversationId].isActive, "Already exists");
@@ -29,7 +31,9 @@ contract ChatSystem {
         emit ConversationStarted(_conversationId, _initialRootHash);
     }
 
-    function updateConversationFor(address _user, bytes32 _conversationId, bytes32 _databaseId, bytes32 _newRootHash) external {
+    function updateConversationFor(address _user, bytes32 _conversationId, bytes32 _databaseId, bytes32 _newRootHash)
+        external
+    {
         ChatInfo storage chat = conversations[_conversationId];
         require(chat.isActive, "Chat not active");
 
