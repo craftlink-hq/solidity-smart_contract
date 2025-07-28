@@ -68,23 +68,23 @@ Transactions saved to: /craftlink-hq/solidity-smart_contract/broadcast/DeployV2.
 
 ## LATEST DEPLOYMENT
 
-Registry deployed at: 0x4BEB47A1489648b297e3e7Af6F12B14721135765  
-https://sepolia-blockscout.lisk.com/address/0x4BEB47A1489648b297e3e7Af6F12B14721135765
+Registry deployed at: 0xbE5d41343CBE0C5DCe18eFC3d4444629E5FA5D84  
+https://sepolia-blockscout.lisk.com/address/0xbE5d41343CBE0C5DCe18eFC3d4444629E5FA5D84
 
-Token deployed at: 0x3BE4f07114C2c879ddC56969ec87EC4036f5510c   
-https://sepolia-blockscout.lisk.com/address/0x3BE4f07114C2c879ddC56969ec87EC4036f5510c
+Token deployed at: 0x3b3B1f6bE24c82CE080195A83132E436FcdAAA01   
+https://sepolia-blockscout.lisk.com/address/0x3b3B1f6bE24c82CE080195A83132E436FcdAAA01
 
-CraftCoin deployed at: 0x1BDf32e62d0ac79bb87Dd70205C94CC26A824101   
-https://sepolia-blockscout.lisk.com/address/0x1BDf32e62d0ac79bb87Dd70205C94CC26A824101
+CraftCoin deployed at: 0x0a055E86433704b92151238b3C51bA924392EA38   
+https://sepolia-blockscout.lisk.com/address/0x0a055E86433704b92151238b3C51bA924392EA38
 
-PaymentProcessor deployed at: 0x63fCF94801b3b54350dA98DdbEEFd5423951B9D1    
-https://sepolia-blockscout.lisk.com/address/0x63fCF94801b3b54350dA98DdbEEFd5423951B9D1
+PaymentProcessor deployed at: 0xB86d3C1313227b3B8CE7da7DF8033313229b9Ba9    
+https://sepolia-blockscout.lisk.com/address/0xB86d3C1313227b3B8CE7da7DF8033313229b9Ba9
 
-GigMarketplace deployed at: 0xb9193980057233220b6284Af1E1e1F232fAc3065  
-https://sepolia-blockscout.lisk.com/address/0xb9193980057233220b6284Af1E1e1F232fAc3065
+GigMarketplace deployed at: 0x59eBa0bb6188a50Bda6322837C42EaD83912ADEd  
+https://sepolia-blockscout.lisk.com/address/0x59eBa0bb6188a50Bda6322837C42EaD83912ADEd
 
-ReviewSystem deployed at: 0xc7e0e3aF97292fD61d20Ae227008d6BD7DeAb622    
-https://sepolia-blockscout.lisk.com/address/0xc7e0e3aF97292fD61d20Ae227008d6BD7DeAb622
+ReviewSystem deployed at: 0xe4e6e80012cc92cC736e85FfeF39896C7E9116d9    
+https://sepolia-blockscout.lisk.com/address/0xe4e6e80012cc92cC736e85FfeF39896C7E9116d9
 
-ChatSystem deployed at: 0x40AB41830f4E2BBE43E826948421376c16D46Ca1  
-https://sepolia-blockscout.lisk.com/address/0x40AB41830f4E2BBE43E826948421376c16D46Ca1
+ChatSystem deployed at: 0xC7eB14640f607558CA28065b4B1D85980001389b  
+https://sepolia-blockscout.lisk.com/address/0xC7eB14640f607558CA28065b4B1D85980001389b
