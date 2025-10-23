@@ -57,3 +57,5 @@ contract DeployV3Script is Script {
 
 // DEPLOY COMMAND
 // forge script script/DeployV3.s.sol:DeployV3Script --rpc-url $LISK_SEPOLIA_RPC_URL --broadcast --verify -vvvv
+
+// forge script script/DeployV3.s.sol:DeployV3Script --rpc-url $BASE_SEPOLIA_RPC_URL --broadcast --verify --verifier etherscan -vvvv
