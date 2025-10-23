@@ -4,11 +4,11 @@ out = "out"
 libs = ["lib"]
 fs_permissions = [{ access = "read-write", path = "./"}]
 
-[rpc_endpoints]
-lisk-sepolia = "${LISK_SEPOLIA_RPC_URL}"
+# [rpc_endpoints]
+# lisk-sepolia = "${LISK_SEPOLIA_RPC_URL}"
 
 [etherscan]
-lisk-sepolia = { key = "${BLOCKSCOUT_API_KEY}", url = "https://sepolia-blockscout.lisk.com/api", chain = 4202 }
+sepolia = { key = "${ETHERSCAN_API_KEY}", url = "https://api.etherscan.io/v2/api?chainid=84532&apikey=${ETHERSCAN_API_KEY}", chain = 84532 }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
